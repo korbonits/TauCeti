@@ -320,28 +320,34 @@ theorem homogeneousComponent_subst_eq_coe_aeval [CommRing R] {n : ℕ} {f : MvPo
   simpa using (MvPolynomial.comp_aeval_apply (MvPolynomial.coeToMvPowerSeries.algHom R)
     (homogeneousComponentPolynomial n f) (f := l)).symm
 
-/-- The degree-`n` part of a symmetric series `Φ` in two variables vanishing below degree `n`
-is a symmetric polynomial. -/
+/-- The degree-`n` part of a symmetric series `Φ` in two variables is a symmetric polynomial. -/
 theorem isSymmetric_homogeneousComponentPolynomial [CommRing R] {n : ℕ}
-    {Φ : MvPowerSeries (Fin 2) R} (hΦ : n ≤ Φ.order) (hsymm : Φ.subst ![X 1, X 0] = Φ) :
+    {Φ : MvPowerSeries (Fin 2) R} (hsymm : Φ.subst ![X 1, X 0] = Φ) :
     (homogeneousComponentPolynomial n Φ).IsSymmetric := by
-  have hX2 (i : Fin 2) := PowerSeries.HasSubst.X (S := R) i
-  have h : MvPolynomial.aeval ![MvPolynomial.X 1, MvPolynomial.X 0]
-      (homogeneousComponentPolynomial n Φ) = homogeneousComponentPolynomial n Φ := by
-    refine MvPolynomial.coe_inj.mp ?_
-    rw [← homogeneousComponent_subst_eq_coe_aeval hΦ (hasSubst_finTwo (hX2 1) (hX2 0))
-      (fun i ↦ by fin_cases i <;> simp)
-      (fun i ↦ by fin_cases i <;> simp [homogeneousComponent_one_X]), hsymm,
-      coe_homogeneousComponentPolynomial]
   intro e
   rcases Equiv.Perm.eq_one_or_swap_fin_two e with rfl | rfl
   · simp
-  · have hswap : (MvPolynomial.X ∘ Equiv.swap (0 : Fin 2) 1 : Fin 2 → MvPolynomial (Fin 2) R) =
-        ![MvPolynomial.X 1, MvPolynomial.X 0] := by
+  · set τ : Fin 2 ≃ Fin 2 := Equiv.swap 0 1 with hτ
+    have hren : rename τ Φ = Φ := by
+      rw [rename_eq_subst, ← hsymm]
+      congr 1
       funext i
-      fin_cases i <;> simp
-    rw [MvPolynomial.rename_eq_aeval, hswap]
-    exact h
+      fin_cases i <;> simp [hτ]
+    have hΦ (x : Fin 2 →₀ ℕ) : coeff (Finsupp.mapDomain τ x) Φ = coeff x Φ := by
+      have h := coeff_embDomain_rename τ.toEmbedding Φ x
+      have hren' : rename (τ.toEmbedding : Fin 2 → Fin 2) Φ = Φ := hren
+      rwa [hren', Finsupp.embDomain_eq_mapDomain] at h
+    have hc (d : Fin 2 →₀ ℕ) : (homogeneousComponentPolynomial n Φ).coeff d =
+        if d.degree = n then coeff d Φ else 0 := by
+      rw [← MvPolynomial.coeff_coe, coe_homogeneousComponentPolynomial,
+        coeff_homogeneousComponent]
+    ext d'
+    obtain ⟨d, rfl⟩ : ∃ d, Finsupp.mapDomain τ d = d' :=
+      ⟨Finsupp.mapDomain τ d', by
+        rw [← Finsupp.mapDomain_comp]
+        simp [hτ]⟩
+    rw [MvPolynomial.coeff_rename_mapDomain τ τ.injective, hc, hc, Finsupp.degree_mapDomain,
+      hΦ]
 
 end Polynomial
 

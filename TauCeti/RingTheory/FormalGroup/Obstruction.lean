@@ -129,7 +129,7 @@ theorem exists_homogeneousComponent_eq_smul_lazardCocycle (F : FormalGroup R) {n
     ∃ c : R, homogeneousComponent n Φ = ↑(c • TauCeti.lazardCocycle n R) := by
   obtain ⟨c, hc⟩ := TauCeti.exists_eq_smul_lazardCocycle hn
     (isHomogeneous_homogeneousComponentPolynomial _ _)
-    (isSymmetric_homogeneousComponentPolynomial hΦ hsymm)
+    (isSymmetric_homogeneousComponentPolynomial hsymm)
     (isAddCocycle₂_homogeneousComponentPolynomial F hΦ hcocycle)
   exact ⟨c, by rw [← coe_homogeneousComponentPolynomial]; exact congrArg _ hc⟩
 
