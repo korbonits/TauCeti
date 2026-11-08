@@ -5,12 +5,14 @@ Authors: The Tau Ceti contributors
 -/
 module
 
+public import Mathlib.Data.Set.Function
 public import Mathlib.Data.Set.Image
 
 /-!
 # Images of sets under compositions
 
-This file contains elementary lemmas about images of sets under composed functions.
+This file contains elementary lemmas about images of sets under composed functions, and about
+injectivity of a map on a set that is realized by an equivalence of subtypes.
 -/
 
 public section
@@ -41,5 +43,12 @@ lemma image_image_inter_eq_inter_image {α β γ δ : Type*} {A s : Set α} {B :
   · rintro ⟨hwU, _, ⟨⟨z, hzs, rfl⟩, hzB⟩, rfl⟩
     have hzA := (hU z hzB).1 hwU
     exact ⟨g z, ⟨z, ⟨hzs, hzA⟩, rfl⟩, (hform z hzA).symm⟩
+
+/-- If a map `g` agrees on `s` with an equivalence of subtypes `s ≃ t`, then `g` is injective
+on `s`. -/
+theorem injOn_of_equiv_apply_eq {α β : Type*} {s : Set α} {t : Set β} {g : α → β} (e : s ≃ t)
+    (he : ∀ z : s, (e z : β) = g z) : InjOn g s :=
+  fun x hx y hy hxy => congrArg Subtype.val
+    (e.injective (Subtype.ext ((he ⟨x, hx⟩).trans (hxy.trans (he ⟨y, hy⟩).symm))))
 
 end TauCeti
