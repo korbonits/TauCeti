@@ -147,31 +147,6 @@ private theorem sum_map_snd_lowerList (i : b.support) {l : List (P.weylGroup × 
     List.sum_append, List.sum_cons, List.sum_nil, Function.comp_def]
   ring
 
-omit [P.flip.IsReduced] in
-/-- Subdividing an entry `(τ, d)` of a linked list of minimal coset representatives at the fraction
-`θ` of its duration keeps the list linked, and its directions are minimal coset representatives. -/
-private theorem linked_subdivide {lam : M} {l : List (P.weylGroup × ℚ)} (hl : Linked P b lam 0 l)
-    (hlmin : ∀ p ∈ l, (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) p.1)
-    {j₁ : ℕ} (hj₁ : j₁ < l.length) {τ : P.weylGroup} {d : ℚ} (hτd : l[j₁] = (τ, d)) (θ : ℚ) :
-    Linked P b lam 0 (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1)) ∧
-      ∀ p ∈ l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1),
-        (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) p.1 := by
-  have hτmin : (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) τ := by
-    have := hlmin _ (List.getElem_mem hj₁)
-    rwa [hτd] at this
-  refine ⟨?_, fun p hp ↦ ?_⟩
-  · have hsplit : l = l.take j₁ ++ (τ, θ * d + (1 - θ) * d) :: l.drop (j₁ + 1) := by
-      rw [show θ * d + (1 - θ) * d = d by ring, ← hτd, ← List.drop_eq_getElem_cons hj₁,
-        List.take_append_drop]
-    rw [hsplit] at hl
-    exact Linked.split hτmin hl
-  · simp only [List.mem_append, List.mem_cons] at hp
-    rcases hp with hp | rfl | rfl | hp
-    · exact hlmin p (List.mem_of_mem_take hp)
-    · exact hτmin
-    · exact hτmin
-    · exact hlmin p (List.mem_of_mem_drop hp)
-
 /-- Entries and partial sums of durations of the list obtained by subdividing the entry
 `l[j₁] = (τ, d)` at the fraction `θ`: before the cut they are those of `l`, the entry at `j₁` is
 `(τ, θ d)` and the one after it is `(τ, (1 - θ) d)`. -/
@@ -257,7 +232,7 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
         (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) p.1 := by
   obtain ⟨hDp_len, hDp_lt, hDp_j₁, hDp_j₁1, hDp_fst, hcum_le, hcum_j₁1⟩ :=
     subdivide_getElem_and_sum_take hj₁ hτd θ hDp
-  obtain ⟨hDp_linked, hDpmin⟩ := linked_subdivide hl hlmin hj₁ hτd θ
+  obtain ⟨hDp_linked, hDpmin⟩ := Linked.subdivide hl hlmin hj₁ hτd θ
   rw [← hDp] at hDp_linked hDpmin
   -- Reflect the window `[k₀, j₁]` of the subdivided list in `sᵢ`.
   have hW := Linked.mapIdx_simple_mul hlam hDp_linked hDpmin i (k₀ := k₀) (j₁ := j₁)
@@ -327,21 +302,13 @@ private theorem preReflection_smul_apply (f : M →+ V) (i : b.support) (F : Mod
 private theorem lt_and_lt_add_one_of_lt_succ {hgt : ℕ → ℚ} {k₀ j₁ : ℕ} {z : ℚ}
     (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ → hgt k < hgt (k + 1)) (hk₀ : hgt k₀ = z)
     (hj₁ : hgt j₁ < z + 1) {k : ℕ} (hk₀k : k₀ < k) (hkj : k ≤ j₁) : z < hgt k ∧ hgt k < z + 1 := by
-  have hmono : ∀ m k, k₀ ≤ k → k + m ≤ j₁ + 1 → hgt k ≤ hgt (k + m) := by
-    intro m
-    induction m with
-    | zero => simp
-    | succ m ih =>
-      intro k hk hkm
-      exact (ih k hk (by omega)).trans (hrise (k + m) (by omega) (by omega)).le
+  have hsm : StrictMonoOn hgt (Set.Icc k₀ j₁) :=
+    strictMonoOn_of_lt_add_one Set.ordConnected_Icc fun m _ hm hm' ↦
+      hrise m hm.1 (by simp only [Set.mem_Icc] at hm'; omega)
   refine ⟨?_, ?_⟩
-  · have h₁ := hrise k₀ le_rfl (by omega)
-    have h₂ := hmono (k - (k₀ + 1)) (k₀ + 1) (by omega) (by omega)
-    rw [show k₀ + 1 + (k - (k₀ + 1)) = k by omega] at h₂
-    linarith
-  · have h₂ := hmono (j₁ - k) k (by omega) (by omega)
-    rw [show k + (j₁ - k) = j₁ by omega] at h₂
-    linarith
+  · rw [← hk₀]
+    exact hsm ⟨le_rfl, by omega⟩ ⟨hk₀k.le, hkj⟩ hk₀k
+  · exact (hsm.monotoneOn ⟨hk₀k.le, hkj⟩ ⟨by omega, le_rfl⟩ hkj).trans_lt hj₁
 
 /-- A rational strictly between two consecutive integers, congruent modulo integers to `c`, shows
 that `c` is not an integer. -/
@@ -399,11 +366,6 @@ private theorem eq_cast_div_of_add_mul_eq [CharZero 𝕜] {x y : ℚ} {z : ℤ} 
   rw [eq_div_iff (by exact_mod_cast hy)]
   linear_combination h
 
-/-- Adding one more entry of a list adds its image to the partial sum of the images. -/
-private theorem sum_take_succ_map {α β : Type*} [AddMonoid β] (g : α → β) (D : List α) {k : ℕ}
-    (hk : k < D.length) : ((D.take (k + 1)).map g).sum = ((D.take k).map g).sum + g D[k] := by
-  rw [List.map_take, List.map_take, List.sum_take_succ _ _ (by simpa using hk), List.getElem_map]
-
 /-- Along a window where the rational heights `∑ dₖ c(τₖ)` rise strictly, the integers `c(τₖ)` are
 positive, as the durations `dₖ` are. -/
 private theorem coroot_pos_of_lt_succ {α : Type*} (c : α → ℤ) (D : List (α × ℚ))
@@ -412,7 +374,11 @@ private theorem coroot_pos_of_lt_succ {α : Type*} (c : α → ℤ) (D : List (�
     (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ → hgt k < hgt (k + 1)) :
     ∀ k (hk : k < D.length), k₀ ≤ k → k ≤ j₁ → 0 < c D[k].1 := fun k hk hk₀ hkj ↦ by
   have := hrise k hk₀ hkj
-  rw [hhgt, hhgt, sum_take_succ_map _ D hk] at this
+  have hsucc : ((D.take (k + 1)).map fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)).sum =
+      ((D.take k).map fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)).sum + D[k].2 * (c D[k].1 : ℚ) := by
+    rw [List.map_take, List.map_take, List.sum_take_succ _ _ (by simpa using hk),
+      List.getElem_map]
+  rw [hhgt, hhgt, hsucc] at this
   have h : (0 : ℚ) < c D[k].1 := pos_of_mul_pos_right (by linarith) (hdpos k hk).le
   exact_mod_cast h
 
@@ -441,7 +407,10 @@ private theorem window_facts_of_heights {α : Type*} (c : α → ℤ) (D : List 
   · have hlt := lt_and_lt_add_one_of_lt_succ hrise hk₀ (by nlinarith [mul_pos hθpos hdH]) hk₀' hkj
     exact not_exists_intCast_of_lt_of_lt_add_one (hcong k hk) hlt.1 hlt.2
   · have := hmin k hkk
-    have hsucc := sum_take_succ_map (fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)) D hk
+    have hsucc : ((D.take (k + 1)).map fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)).sum =
+        ((D.take k).map fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)).sum + D[k].2 * (c D[k].1 : ℚ) := by
+      rw [List.map_take, List.map_take, List.sum_take_succ _ _ (by simpa using hk),
+        List.getElem_map]
     rw [← hhgt, ← hhgt, hkk, hk₀] at hsucc
     have : (c D[k].1 : ℚ) ≤ 0 := nonpos_of_mul_nonpos_right (by linarith) (hdpos k hk)
     exact_mod_cast this
