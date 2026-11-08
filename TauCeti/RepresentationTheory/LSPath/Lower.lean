@@ -363,7 +363,7 @@ private theorem exists_lower_toPLPath_eq_ofSegments_lowerList (π : LSPath P b l
     rw [← hminH, hz, hHF] at hle
     exact_mod_cast hle
   obtain ⟨hint, hleft, hcut⟩ := List.window_facts_of_sum_take_map_mul
-    (fun w ↦ P.coroot' i (w • lam)) D hdpos hk₀j₁ hj₁lt hgt (fun _ ↦ rfl) hgtk₀ hrise' hpos hleftH
+    (fun w ↦ P.coroot' i (w • lam)) D hdpos hk₀j₁ hj₁lt hgt (fun _ ↦ rfl) hgtk₀ hrise' hleftH
     (fun k hk ↦ π.linked_dirDurations.exists_sum_take_sub_mul_eq_intCast hlam (P.coroot' i) hk)
     hθpos (by rw [hDj₁]; exact div_mul_cancel₀ _ hdH.ne')
   refine ⟨k₀, j₁, hj₁lt, θ, hk₀j₁, hθpos.le, by exact_mod_cast hθle', hpos, hint, hleft, hcut, ?_⟩

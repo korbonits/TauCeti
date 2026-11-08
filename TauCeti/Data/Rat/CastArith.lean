@@ -14,11 +14,14 @@ public import Mathlib.Tactic.LinearCombination
 # Integrality arguments for rational numbers
 
 A rational strictly between two consecutive integers, congruent modulo integers to `c`, shows that
-`c` is not an integer (`not_exists_intCast_of_lt_of_lt_add_one`), and a relation `x + θ y = z + 1`
-with `x`, `y` rational determines `θ` as a rational number (`eq_cast_div_of_add_mul_eq`).
+`c` is not an integer (`TauCeti.not_exists_intCast_of_lt_of_lt_add_one`), and a relation
+`x + θ y = z + 1` with `x`, `y` rational determines `θ` as a rational number
+(`TauCeti.eq_cast_div_of_add_mul_eq`).
 -/
 
 public section
+
+namespace TauCeti
 
 /-- A rational strictly between two consecutive integers, congruent modulo integers to `c`, shows
 that `c` is not an integer. -/
@@ -41,3 +44,5 @@ theorem eq_cast_div_of_add_mul_eq {𝕜 : Type*} [Field 𝕜] [CharZero 𝕜] {x
   push_cast
   rw [eq_div_iff (by exact_mod_cast hy)]
   linear_combination h
+
+end TauCeti

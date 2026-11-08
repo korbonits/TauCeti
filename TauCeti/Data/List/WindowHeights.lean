@@ -16,9 +16,9 @@ public import TauCeti.Order.Monotone.LtAddOne
 
 For a list `D` of pairs `(τ, d)` of positive durations and an integer weight `c τ`, the rational
 heights `∑_{j<k} dⱼ c(τⱼ)` rising strictly on a window force `c(τₖ) > 0` there
-(`List.pos_of_rise_sum_take_map_mul`), and if the heights are congruent modulo integers to the
-break times times the weights, the weights at the breaks of the window are non-integers
-(`List.window_facts_of_sum_take_map_mul`).
+(`List.pos_of_rise_sum_take_map_mul`). If moreover the heights are congruent modulo integers to the
+break times `aₖ` times the weights, then the products `aₖ c(τₖ)` at the interior breaks of the
+window are not integers (`List.window_facts_of_sum_take_map_mul`).
 -/
 
 public section
@@ -44,14 +44,14 @@ theorem pos_of_rise_sum_take_map_mul {α : Type*} (c : α → ℤ) (D : List (α
 /-- **The integrality data of a window.** Let the rational heights `hgt k = ∑_{j<k} dⱼ c(τⱼ)` of a
 list `D` start at the integer `z` at `k₀`, rise strictly up to `j₁`, and reach `z + 1` at the
 fraction `θ` of the entry `j₁`, and let them be congruent modulo integers to `aₖ c(τₖ)` at the
-break `aₖ`. Then `aₖ c(τₖ)` is not an integer strictly inside the window, `c(τₖ) ≤ 0` just before
-it, and `(a_{j₁} + θ d_{j₁}) c(τ_{j₁})` is an integer. -/
+break `aₖ`. Then `aₖ c(τₖ)` is not an integer strictly inside the window, `c(τₖ) ≤ 0` for the
+entry just before the window provided the height there is at most `z` (the hypothesis `hmin`), and
+`(a_{j₁} + θ d_{j₁}) c(τ_{j₁})` is an integer. -/
 theorem window_facts_of_sum_take_map_mul {α : Type*} (c : α → ℤ) (D : List (α × ℚ))
     (hdpos : ∀ k (hk : k < D.length), 0 < D[k].2) {k₀ j₁ : ℕ} (hk₀j₁ : k₀ ≤ j₁)
     (hj₁ : j₁ < D.length) (hgt : ℕ → ℚ)
     (hhgt : ∀ k, hgt k = ((D.take k).map fun p ↦ p.2 * (c p.1 : ℚ)).sum) {z : ℤ}
     (hk₀ : hgt k₀ = z) (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ → hgt k < hgt (k + 1))
-    (hpos : ∀ k (hk : k < D.length), k₀ ≤ k → k ≤ j₁ → 0 < c D[k].1)
     (hmin : ∀ k, k + 1 = k₀ → (z : ℚ) ≤ hgt k)
     (hcong : ∀ k (hk : k < D.length),
       ∃ m : ℤ, hgt k - ((D.take k).map Prod.snd).sum * (c D[k].1 : ℚ) = m)
@@ -60,11 +60,13 @@ theorem window_facts_of_sum_take_map_mul {α : Type*} (c : α → ℤ) (D : List
       ¬∃ m : ℤ, ((D.take k).map Prod.snd).sum * (c D[k].1 : ℚ) = m) ∧
     (∀ k (hk : k < D.length), k + 1 = k₀ → c D[k].1 ≤ 0) ∧
     ∃ m : ℤ, (((D.take j₁).map Prod.snd).sum + θ * D[j₁].2) * (c D[j₁].1 : ℚ) = m := by
+  have hpos := pos_of_rise_sum_take_map_mul c D hdpos hgt hhgt hrise
   have hdH : 0 < D[j₁].2 * (c D[j₁].1 : ℚ) :=
     mul_pos (hdpos j₁ hj₁) (by exact_mod_cast hpos j₁ hj₁ hk₀j₁ le_rfl)
   refine ⟨fun k hk hk₀' hkj ↦ ?_, fun k hk hkk ↦ ?_, ?_⟩
-  · have hlt := lt_and_lt_add_one_of_lt_succ hrise hk₀ (by nlinarith [mul_pos hθpos hdH]) hk₀' hkj
-    exact not_exists_intCast_of_lt_of_lt_add_one (hcong k hk) hlt.1 hlt.2
+  · have hlt := TauCeti.lt_and_lt_of_lt_succ (u := (z : ℚ) + 1) hrise hk₀
+      (by nlinarith [mul_pos hθpos hdH]) hk₀' hkj
+    exact TauCeti.not_exists_intCast_of_lt_of_lt_add_one (hcong k hk) hlt.1 hlt.2
   · have := hmin k hkk
     have hsucc : ((D.take (k + 1)).map fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)).sum =
         ((D.take k).map fun p : α × ℚ ↦ p.2 * (c p.1 : ℚ)).sum + D[k].2 * (c D[k].1 : ℚ) := by
