@@ -32,7 +32,8 @@ polynomial (`MvPowerSeries.homogeneousComponentPolynomial`), and the lowest-degr
 `f(a)` is that polynomial evaluated at the linear parts of the `a i`
 (`MvPowerSeries.homogeneousComponent_subst_eq_coe_aeval`). For a series invariant under
 renaming of the variables by every permutation this polynomial is symmetric
-(`MvPowerSeries.isSymmetric_homogeneousComponentPolynomial`).
+(`MvPowerSeries.isSymmetric_homogeneousComponentPolynomial`), because renaming commutes with
+taking the polynomial (`MvPowerSeries.rename_homogeneousComponentPolynomial`).
 
 Products and powers of close series are close: the order of `x y - x' y'` is bounded through
 those of `x - x'` and `y - y'` (`MvPowerSeries.le_order_mul_sub_mul`), and if `x` and `y` have
@@ -319,25 +320,33 @@ theorem homogeneousComponent_subst_eq_coe_aeval [CommRing R] {n : ℕ} {f : MvPo
   simpa using (MvPolynomial.comp_aeval_apply (MvPolynomial.coeToMvPowerSeries.algHom R)
     (homogeneousComponentPolynomial n f) (f := l)).symm
 
-/-- The degree-`n` part of a series `Φ` in finitely many variables that is invariant under every
-renaming of the variables by a permutation is a symmetric polynomial. -/
-theorem isSymmetric_homogeneousComponentPolynomial [CommSemiring R] {n : ℕ}
-    {Φ : MvPowerSeries σ R} (hsymm : ∀ e : Equiv.Perm σ, rename e Φ = Φ) :
-    (homogeneousComponentPolynomial n Φ).IsSymmetric := by
-  intro e
-  have hΦ (x : σ →₀ ℕ) : coeff (Finsupp.mapDomain e x) Φ = coeff x Φ := by
-    have h := coeff_embDomain_rename e.toEmbedding Φ x
-    have hren' : rename (e.toEmbedding : σ → σ) Φ = Φ := hsymm e
-    rwa [hren', Finsupp.embDomain_eq_mapDomain] at h
-  have hc (d : σ →₀ ℕ) : (homogeneousComponentPolynomial n Φ).coeff d =
-      if d.degree = n then coeff d Φ else 0 := by
-    rw [← MvPolynomial.coeff_coe, coe_homogeneousComponentPolynomial, coeff_homogeneousComponent]
+private theorem coeff_homogeneousComponentPolynomial [CommSemiring R] (n : ℕ)
+    (Φ : MvPowerSeries σ R) (d : σ →₀ ℕ) :
+    (homogeneousComponentPolynomial n Φ).coeff d = if d.degree = n then coeff d Φ else 0 := by
+  rw [← MvPolynomial.coeff_coe, coe_homogeneousComponentPolynomial, coeff_homogeneousComponent]
+
+/-- Renaming the variables by an equivalence commutes with taking the degree-`n` polynomial. -/
+theorem rename_homogeneousComponentPolynomial [CommSemiring R] [Finite τ] (e : σ ≃ τ) (n : ℕ)
+    (Φ : MvPowerSeries σ R) :
+    MvPolynomial.rename e (homogeneousComponentPolynomial n Φ) =
+      homogeneousComponentPolynomial n (rename e Φ) := by
   ext d'
   obtain ⟨d, rfl⟩ : ∃ d, Finsupp.mapDomain e d = d' :=
     ⟨Finsupp.mapDomain e.symm d', by
       rw [← Finsupp.mapDomain_comp]
       simp⟩
-  rw [MvPolynomial.coeff_rename_mapDomain e e.injective, hc, hc, Finsupp.degree_mapDomain, hΦ]
+  have h := coeff_embDomain_rename e.toEmbedding Φ d
+  rw [Finsupp.embDomain_eq_mapDomain] at h
+  rw [MvPolynomial.coeff_rename_mapDomain e e.injective, coeff_homogeneousComponentPolynomial,
+    coeff_homogeneousComponentPolynomial, Finsupp.degree_mapDomain]
+  exact if_congr Iff.rfl (by simpa using h.symm) rfl
+
+/-- The degree-`n` part of a series `Φ` in finitely many variables that is invariant under every
+renaming of the variables by a permutation is a symmetric polynomial. -/
+theorem isSymmetric_homogeneousComponentPolynomial [CommSemiring R] {n : ℕ}
+    {Φ : MvPowerSeries σ R} (hsymm : ∀ e : Equiv.Perm σ, rename e Φ = Φ) :
+    (homogeneousComponentPolynomial n Φ).IsSymmetric := fun e ↦ by
+  rw [rename_homogeneousComponentPolynomial, hsymm e]
 
 end Polynomial
 
