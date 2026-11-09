@@ -8,9 +8,8 @@ module
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.RingTheory.MvPolynomial.Symmetric.Defs
 public import Mathlib.RingTheory.MvPowerSeries.Order
+public import Mathlib.RingTheory.MvPowerSeries.Rename
 public import Mathlib.RingTheory.MvPowerSeries.Substitution
--- Proof-only: the permutations of `Fin 2`.
-import TauCeti.Data.Fin.Basic
 -- Proof-only: coefficients of a difference of substitutions.
 import TauCeti.RingTheory.MvPowerSeries.Substitution
 
@@ -31,8 +30,8 @@ expression such as `f(F(X, Y), Z)`, for a formal group law `F(X, Y) = X + Y + �
 the polynomial `f_p(X + Y, Z)`. In finitely many variables the degree-`p` component is a
 polynomial (`MvPowerSeries.homogeneousComponentPolynomial`), and the lowest-degree component of
 `f(a)` is that polynomial evaluated at the linear parts of the `a i`
-(`MvPowerSeries.homogeneousComponent_subst_eq_coe_aeval`). For a symmetric series in two
-variables this polynomial is symmetric
+(`MvPowerSeries.homogeneousComponent_subst_eq_coe_aeval`). For a series invariant under
+renaming of the variables by every permutation this polynomial is symmetric
 (`MvPowerSeries.isSymmetric_homogeneousComponentPolynomial`).
 
 Products and powers of close series are close: the order of `x y - x' y'` is bounded through
@@ -320,34 +319,25 @@ theorem homogeneousComponent_subst_eq_coe_aeval [CommRing R] {n : ℕ} {f : MvPo
   simpa using (MvPolynomial.comp_aeval_apply (MvPolynomial.coeToMvPowerSeries.algHom R)
     (homogeneousComponentPolynomial n f) (f := l)).symm
 
-/-- The degree-`n` part of a symmetric series `Φ` in two variables is a symmetric polynomial. -/
-theorem isSymmetric_homogeneousComponentPolynomial [CommRing R] {n : ℕ}
-    {Φ : MvPowerSeries (Fin 2) R} (hsymm : Φ.subst ![X 1, X 0] = Φ) :
+/-- The degree-`n` part of a series `Φ` in finitely many variables that is invariant under every
+renaming of the variables by a permutation is a symmetric polynomial. -/
+theorem isSymmetric_homogeneousComponentPolynomial [CommSemiring R] {n : ℕ}
+    {Φ : MvPowerSeries σ R} (hsymm : ∀ e : Equiv.Perm σ, rename e Φ = Φ) :
     (homogeneousComponentPolynomial n Φ).IsSymmetric := by
   intro e
-  rcases Equiv.Perm.eq_one_or_swap_fin_two e with rfl | rfl
-  · simp
-  · set τ : Fin 2 ≃ Fin 2 := Equiv.swap 0 1 with hτ
-    have hren : rename τ Φ = Φ := by
-      rw [rename_eq_subst, ← hsymm]
-      congr 1
-      funext i
-      fin_cases i <;> simp [hτ]
-    have hΦ (x : Fin 2 →₀ ℕ) : coeff (Finsupp.mapDomain τ x) Φ = coeff x Φ := by
-      have h := coeff_embDomain_rename τ.toEmbedding Φ x
-      have hren' : rename (τ.toEmbedding : Fin 2 → Fin 2) Φ = Φ := hren
-      rwa [hren', Finsupp.embDomain_eq_mapDomain] at h
-    have hc (d : Fin 2 →₀ ℕ) : (homogeneousComponentPolynomial n Φ).coeff d =
-        if d.degree = n then coeff d Φ else 0 := by
-      rw [← MvPolynomial.coeff_coe, coe_homogeneousComponentPolynomial,
-        coeff_homogeneousComponent]
-    ext d'
-    obtain ⟨d, rfl⟩ : ∃ d, Finsupp.mapDomain τ d = d' :=
-      ⟨Finsupp.mapDomain τ d', by
-        rw [← Finsupp.mapDomain_comp]
-        simp [hτ]⟩
-    rw [MvPolynomial.coeff_rename_mapDomain τ τ.injective, hc, hc, Finsupp.degree_mapDomain,
-      hΦ]
+  have hΦ (x : σ →₀ ℕ) : coeff (Finsupp.mapDomain e x) Φ = coeff x Φ := by
+    have h := coeff_embDomain_rename e.toEmbedding Φ x
+    have hren' : rename (e.toEmbedding : σ → σ) Φ = Φ := hsymm e
+    rwa [hren', Finsupp.embDomain_eq_mapDomain] at h
+  have hc (d : σ →₀ ℕ) : (homogeneousComponentPolynomial n Φ).coeff d =
+      if d.degree = n then coeff d Φ else 0 := by
+    rw [← MvPolynomial.coeff_coe, coe_homogeneousComponentPolynomial, coeff_homogeneousComponent]
+  ext d'
+  obtain ⟨d, rfl⟩ : ∃ d, Finsupp.mapDomain e d = d' :=
+    ⟨Finsupp.mapDomain e.symm d', by
+      rw [← Finsupp.mapDomain_comp]
+      simp⟩
+  rw [MvPolynomial.coeff_rename_mapDomain e e.injective, hc, hc, Finsupp.degree_mapDomain, hΦ]
 
 end Polynomial
 
