@@ -11,12 +11,13 @@ public import Mathlib.Tactic.Linarith
 public import Mathlib.Tactic.LinearCombination
 
 /-!
-# Integrality arguments for rational numbers
+# Integrality arguments in ordered rings and fields
 
 An element of an ordered ring strictly between two consecutive integers, congruent modulo integers
 to `c`, shows that `c` is not an integer (`TauCeti.not_exists_intCast_of_lt_of_lt_add_one`), and a
 relation `x + θ y = r` with `x`, `y`, `r` rational and `y` nonzero determines `θ` as a rational
-number (`TauCeti.eq_ratCast_div_of_add_mul_eq`).
+number (`TauCeti.eq_ratCast_div_of_add_mul_eq`). Only the latter lemma involves rational numbers;
+the former holds in any ordered ring.
 -/
 
 public section

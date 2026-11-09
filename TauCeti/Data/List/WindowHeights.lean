@@ -17,7 +17,7 @@ public import TauCeti.Order.Monotone.LtAddOne
 For a list `D` and weights `f`, `g` of its entries, where the partial sums of `fⱼ gⱼ` rise strictly
 at an entry `k` with `0 ≤ fₖ`, we get `0 < gₖ`
 (`List.pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul`). For a list `D` of pairs `(τ, d)` of
-durations and a weight `c τ`, suppose the integer weights `c(τₖ)` give heights
+positive durations and a weight `c τ`, suppose the integer weights `c(τₖ)` give heights
 `hₖ = ∑_{j<k} dⱼ c(τⱼ)` that start at an integer `z` at `k₀`, satisfy `hₖ < hₖ₊₁` for
 `k₀ ≤ k ≤ j₁`, and reach `z + 1` at the positive fraction `θ` of the entry `j₁`, and suppose the
 heights are congruent modulo integers to the break times `aₖ` times the weights. Then `aₖ c(τₖ)`
@@ -47,16 +47,16 @@ theorem pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul {R : Type*} [Semiring R
 
 /-- **The integrality data of a window.** Let `D` be a list of pairs `(τ, d)` of positive durations
 and integer weights `c τ`, and write `hₖ = ∑_{j<k} dⱼ c(τⱼ)` for the heights. Suppose `hₖ₀ = z` is
-an integer, `hₖ < hₖ₊₁` for `k₀ ≤ k ≤ j₁` with `c(τₖ) > 0`, the height reaches `z + 1` at the
-fraction `θ` of the entry `j₁`, and `hₖ` is congruent modulo integers to `aₖ c(τₖ)` at the break
-`aₖ = ∑_{j<k} dⱼ`. Then `aₖ c(τₖ)` is not an integer for `k₀ < k ≤ j₁`, `c(τₖ) ≤ 0` for the entry
-just before the window provided the height there is at least `z` (the hypothesis `hmin`), and
-`(a_{j₁} + θ d_{j₁}) c(τ_{j₁})` is an integer. -/
+an integer, `hₖ < hₖ₊₁` for `k₀ ≤ k ≤ j₁` (which forces `c(τₖ) > 0` there), the height reaches
+`z + 1` at the fraction `θ` of the entry `j₁`, and `hₖ` is congruent modulo integers to
+`aₖ c(τₖ)` at the break `aₖ = ∑_{j<k} dⱼ`. Then `aₖ c(τₖ)` is not an integer for `k₀ < k ≤ j₁`,
+`c(τₖ) ≤ 0` for the entry just before the window provided the height there is at least `z` (the
+hypothesis `hmin`), and `(a_{j₁} + θ d_{j₁}) c(τ_{j₁})` is an integer. -/
 theorem not_exists_intCast_and_nonpos_and_exists_intCast_of_sum_take_map_mul
     {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
     (c : α → ℤ) (D : List (α × K)) {k₀ j₁ : ℕ}
     (hdpos : ∀ k (hk : k < D.length), 0 < D[k].2)
-    (hpos : ∀ k (hk : k < D.length), k₀ ≤ k → k ≤ j₁ → 0 < c D[k].1) (hk₀j₁ : k₀ ≤ j₁)
+    (hk₀j₁ : k₀ ≤ j₁)
     (hj₁ : j₁ < D.length) {z : ℤ}
     (hk₀ : ((D.take k₀).map fun p ↦ p.2 * (c p.1 : K)).sum = z)
     (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ →
@@ -74,7 +74,8 @@ theorem not_exists_intCast_and_nonpos_and_exists_intCast_of_sum_take_map_mul
     (∀ k (hk : k < D.length), k + 1 = k₀ → c D[k].1 ≤ 0) ∧
     ∃ m : ℤ, (((D.take j₁).map Prod.snd).sum + θ * D[j₁].2) * (c D[j₁].1 : K) = m := by
   have hdH : 0 < D[j₁].2 * (c D[j₁].1 : K) :=
-    mul_pos (hdpos j₁ hj₁) (by exact_mod_cast hpos j₁ hj₁ hk₀j₁ le_rfl)
+    mul_pos (hdpos j₁ hj₁) (pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul Prod.snd
+      (fun p ↦ (c p.1 : K)) D hj₁ (hdpos j₁ hj₁).le (hrise j₁ hk₀j₁ le_rfl))
   refine ⟨fun k hk hk₀' hkj ↦ ?_, fun k hk hkk ↦ ?_, ?_⟩
   · have hlt := TauCeti.lt_and_lt_of_lt_add_one (u := (z : K) + 1) hrise hk₀
       (by nlinarith [mul_pos hθpos hdH]) hk₀' hkj
