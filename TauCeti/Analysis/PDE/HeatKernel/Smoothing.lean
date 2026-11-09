@@ -113,8 +113,7 @@ theorem exists_contDiff_ae_eq_heatSemigroup [CompleteSpace F] {p : ℝ≥0∞} [
     simpa only [toReal_enorm] using ENNReal.toReal_mono hg.ne hx
   -- The second half-step smooths bounded data; the semigroup law identifies the result.
   refine ⟨heatKernel (s : ℝ) ⋆ (g : E → F),
-    contDiff_heatKernel_convolution (t := (s : ℝ)) (by positivity)
-      (Lp.aestronglyMeasurable g) hbound, ?_⟩
+    contDiff_heatKernel_convolution (t := (s : ℝ)) (by positivity) hbound, ?_⟩
   have he : heatSemigroup hp t f = heatSemigroup hp s g := by
     simpa only [hsum, Semigroups.ContractionSemigroup.toStronglyContinuousSemigroup_apply]
       using (heatSemigroup hp).toStronglyContinuousSemigroup.map_add_apply s s f
