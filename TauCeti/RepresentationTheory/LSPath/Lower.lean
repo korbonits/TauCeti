@@ -199,11 +199,11 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
   have hDp_len : Dp.length = l.length + 1 := by
     rw [hDp]; exact List.length_take_append_cons_cons hj₁
   have hDp_lt (k : ℕ) (hk : k < Dp.length) (hkj : k < j₁) : Dp[k] = l[k]'(by omega) := by
-    subst hDp; exact List.getElem_take_append_cons_cons_of_lt hj₁ hkj hk
+    subst hDp; exact List.getElem_take_append_of_lt hj₁.le hkj hk
   have hDp_j₁ (h : j₁ < Dp.length) : Dp[j₁] = (τ, θ * d) := by
-    subst hDp; exact List.getElem_take_append_cons_cons_self hj₁ h
+    subst hDp; exact List.getElem_take_append_cons_cons_self hj₁.le h
   have hDp_j₁1 (h : j₁ + 1 < Dp.length) : Dp[j₁ + 1] = (τ, (1 - θ) * d) := by
-    subst hDp; exact List.getElem_take_append_cons_cons_succ hj₁ h
+    subst hDp; exact List.getElem_take_append_cons_cons_succ hj₁.le h
   have hDp_fst (k : ℕ) (hk : k < Dp.length) (hkj : k ≤ j₁) :
       Dp[k].1 = (l[k]'(by omega)).1 := by
     rcases hkj.lt_or_eq with hkj | rfl
@@ -211,10 +211,10 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
     · rw [hDp_j₁ hk, hτd]
   have hcum_le (k : ℕ) (hk : k ≤ j₁) :
       ((Dp.take k).map Prod.snd).sum = ((l.take k).map Prod.snd).sum := by
-    subst hDp; exact List.sum_take_map_take_append_cons_cons_of_le _ hj₁ hk
+    subst hDp; exact List.sum_take_map_take_append_of_le _ hj₁.le hk
   have hcum_j₁1 : ((Dp.take (j₁ + 1)).map Prod.snd).sum =
       ((l.take j₁).map Prod.snd).sum + θ * d := by
-    subst hDp; exact List.sum_take_succ_map_take_append_cons_cons Prod.snd hj₁
+    subst hDp; exact List.sum_take_succ_map_take_append_cons_cons Prod.snd hj₁.le
   obtain ⟨hDp_linked, hDpmin⟩ := Linked.subdivide hl hlmin hj₁ hτd θ
   rw [← hDp] at hDp_linked hDpmin
   -- Reflect the window `[k₀, j₁]` of the subdivided list in `sᵢ`.
