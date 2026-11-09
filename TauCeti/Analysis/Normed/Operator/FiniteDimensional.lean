@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.Normed.Module.FiniteDimension
 public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.LinearAlgebra.Charpoly.Basic
 public import Mathlib.LinearAlgebra.Eigenspace.Minpoly
 public import Mathlib.Topology.Algebra.Module.FiniteDimension
 
@@ -31,6 +32,9 @@ real-linear operators into a complex space.
 
 * `ContinuousLinearMap.finite_spectrum`: a bounded operator on a finite-dimensional normed space
   has finite spectrum, also over subfields of the scalars such as `ℝ ⊆ ℂ`.
+* `ContinuousLinearMap.isUnit_of_isUnit_toLinearMap`: on a finite-dimensional normed space over a
+  nontrivially normed field, a continuous linear map invertible as a linear map is invertible as a
+  continuous linear map, without completeness of the scalars.
 * `ContinuousLinearMap.denseRange_comp`: on operators out of a finite-dimensional space,
   postcomposition with an operator of dense range has dense range.
 * `ContinuousLinearMap.opNorm_lt_iff`: a strict norm bound can be checked on
@@ -48,13 +52,52 @@ namespace ContinuousLinearMap
 variable {𝕜 V : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
   [NormedAddCommGroup V] [NormedSpace 𝕜 V] [FiniteDimensional 𝕜 V]
 
+omit [CompleteSpace 𝕜] in
+/-- On a finite-dimensional normed space, a continuous linear map that is invertible as a linear
+map is invertible as a continuous linear map: its inverse is a polynomial in it, by the
+minimal polynomial, so no completeness of the scalar field is needed. -/
+theorem isUnit_of_isUnit_toLinearMap {u : V →L[𝕜] V} (hu : IsUnit (u : Module.End 𝕜 V)) :
+    IsUnit u := by
+  let φ : (V →L[𝕜] V) →ₐ[𝕜] Module.End 𝕜 V :=
+    { toFun := fun f ↦ (f : Module.End 𝕜 V)
+      map_one' := rfl
+      map_mul' := fun _ _ ↦ rfl
+      map_zero' := rfl
+      map_add' := fun _ _ ↦ rfl
+      commutes' := fun _ ↦ rfl }
+  have hφ : Function.Injective φ := fun f g h ↦ ContinuousLinearMap.coe_injective h
+  have hinj : Function.Injective (u : Module.End 𝕜 V) := (Module.End.isUnit_iff _).1 hu |>.1
+  have hc := LinearMap.minpoly_coeff_zero_of_injective hinj
+  set p := minpoly 𝕜 (u : Module.End 𝕜 V)
+  have hp : Polynomial.aeval u p = 0 := by
+    apply hφ
+    rw [map_zero]
+    exact (Polynomial.aeval_algHom_apply φ u p).symm.trans (minpoly.aeval 𝕜 _)
+  rw [← Polynomial.divX_mul_X_add p, map_add, map_mul, Polynomial.aeval_X,
+    Polynomial.aeval_C] at hp
+  set g := Polynomial.aeval u (Polynomial.divX p)
+  have hcomm : u * g = g * u := by
+    have : Polynomial.aeval u (Polynomial.X * Polynomial.divX p) =
+        Polynomial.aeval u (Polynomial.divX p * Polynomial.X) := by rw [mul_comm]
+    simpa only [map_mul, Polynomial.aeval_X] using this
+  have h1 : g * u = (-(algebraMap 𝕜 (V →L[𝕜] V) (p.coeff 0))) := eq_neg_of_add_eq_zero_left hp
+  rw [isUnit_iff_exists]
+  refine ⟨(-(p.coeff 0)⁻¹) • g, ?_, ?_⟩
+  · rw [mul_smul_comm, hcomm, h1, smul_neg, neg_smul, neg_neg, Algebra.smul_def, ← map_mul,
+      inv_mul_cancel₀ hc, map_one]
+  · rw [smul_mul_assoc, h1, smul_neg, neg_smul, neg_neg, Algebra.smul_def, ← map_mul,
+      inv_mul_cancel₀ hc, map_one]
+
+omit [CompleteSpace 𝕜] in
 /-- A bounded operator on a finite-dimensional normed space has finite spectrum over any field
 `S` of scalars acting compatibly, for instance over `ℝ` for an operator on a complex space. -/
 theorem finite_spectrum (S : Type*) [Field S] [Algebra S 𝕜] [Algebra S (V →L[𝕜] V)]
     [IsScalarTower S 𝕜 (V →L[𝕜] V)] (T : V →L[𝕜] V) : (spectrum S T).Finite := by
-  have := FiniteDimensional.complete 𝕜 V
-  rw [← spectrum.preimage_algebraMap 𝕜, spectrum_eq]
-  exact (Module.End.finite_spectrum _).preimage (algebraMap S 𝕜).injective.injOn
+  have hsub : spectrum 𝕜 T ⊆ spectrum 𝕜 (T : Module.End 𝕜 V) := fun μ hμ ↦ by
+    rw [spectrum.mem_iff] at hμ ⊢
+    exact fun hu ↦ hμ (isUnit_of_isUnit_toLinearMap hu)
+  rw [← spectrum.preimage_algebraMap 𝕜]
+  exact ((Module.End.finite_spectrum _).subset hsub).preimage (algebraMap S 𝕜).injective.injOn
 
 /-- On continuous linear maps out of a finite-dimensional space, postcomposition with a
 continuous linear map of dense range has dense range: each `T : V →L[𝕜] E` is approximated in
