@@ -65,11 +65,10 @@ an integer, `hₖ < hₖ₊₁` for `k₀ ≤ k ≤ j₁` (which forces `c(τₖ
 `aₖ c(τₖ)` at the break `aₖ = ∑_{j<k} dⱼ`. Then `aₖ c(τₖ)` is not an integer for
 `k₀ < k ≤ j₁`. -/
 theorem not_exists_intCast_sum_take_map_snd_mul
-    {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
+    {K : Type*} [CommRing K] [LinearOrder K] [IsStrictOrderedRing K]
     (c : α → ℤ) (D : List (α × K)) {k₀ j₁ : ℕ}
-    (hdpos : ∀ k (hk : k < D.length), 0 < D[k].2)
     (hk₀j₁ : k₀ ≤ j₁)
-    (hj₁ : j₁ < D.length) {z : ℤ}
+    (hj₁ : j₁ < D.length) (hdj₁ : 0 < D[j₁].2) {z : ℤ}
     (hk₀ : ((D.take k₀).map fun p ↦ p.2 * (c p.1 : K)).sum = z)
     (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ →
       ((D.take k).map fun p ↦ p.2 * (c p.1 : K)).sum <
@@ -83,8 +82,8 @@ theorem not_exists_intCast_sum_take_map_snd_mul
     ∀ k (hk : k < D.length), k₀ < k → k ≤ j₁ →
       ¬∃ m : ℤ, ((D.take k).map Prod.snd).sum * (c D[k].1 : K) = m := by
   have hdH : 0 < D[j₁].2 * (c D[j₁].1 : K) :=
-    mul_pos (hdpos j₁ hj₁) (pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul Prod.snd
-      (fun p ↦ (c p.1 : K)) D hj₁ (hdpos j₁ hj₁).le (hrise j₁ hk₀j₁ le_rfl))
+    mul_pos hdj₁ (pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul Prod.snd
+      (fun p ↦ (c p.1 : K)) D hj₁ hdj₁.le (hrise j₁ hk₀j₁ le_rfl))
   intro k hk hk₀' hkj
   have hlt := TauCeti.lt_and_lt_of_lt_add_one (u := (z : K) + 1) hrise hk₀
     (by nlinarith [mul_pos hθpos hdH]) hk₀' hkj
@@ -92,7 +91,7 @@ theorem not_exists_intCast_sum_take_map_snd_mul
 
 /-- **The weight before a window is nonpositive.** If the height `hₖ = ∑_{j<k} dⱼ c(τⱼ)` before an
 entry `k` of positive duration is at least `z` and the height after it is `z`, then `c(τₖ) ≤ 0`. -/
-theorem nonpos_of_sum_take_map_mul_eq {K : Type*} [Field K] [LinearOrder K]
+theorem nonpos_of_sum_take_map_mul_eq {K : Type*} [CommRing K] [LinearOrder K]
     [IsStrictOrderedRing K] (c : α → ℤ) (D : List (α × K)) {k : ℕ} (hk : k < D.length)
     (hd : 0 < D[k].2) {z : ℤ}
     (hmin : (z : K) ≤ ((D.take k).map fun p ↦ p.2 * (c p.1 : K)).sum)
@@ -105,7 +104,7 @@ theorem nonpos_of_sum_take_map_mul_eq {K : Type*} [Field K] [LinearOrder K]
 to `aₖ c(τₖ)` at the break `aₖ = ∑_{j<k} dⱼ` of an entry `j₁`, and the height reaches the integer
 `z + 1` at the fraction `θ` of that entry, then `(a_{j₁} + θ d_{j₁}) c(τ_{j₁})` is an integer. -/
 theorem exists_intCast_sum_take_map_snd_add_mul
-    {K : Type*} [Field K] (c : α → ℤ) (D : List (α × K)) {j₁ : ℕ} (hj₁ : j₁ < D.length)
+    {K : Type*} [CommRing K] (c : α → ℤ) (D : List (α × K)) {j₁ : ℕ} (hj₁ : j₁ < D.length)
     (hcong : ∃ m : ℤ, ((D.take j₁).map fun p ↦ p.2 * (c p.1 : K)).sum -
       ((D.take j₁).map Prod.snd).sum * (c D[j₁].1 : K) = m)
     {z : ℤ} {θ : K}
