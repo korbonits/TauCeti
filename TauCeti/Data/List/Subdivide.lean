@@ -5,56 +5,68 @@ Authors: The Tau Ceti contributors
 -/
 module
 
-public import Mathlib.Algebra.Field.Rat
+public import Mathlib.Algebra.BigOperators.Group.List.Basic
 public import Mathlib.Data.List.Basic
 
 /-!
-# Subdividing an entry of a list of durations
+# Cutting a list at an entry and inserting two entries
 
-Cutting the entry `(τ, d)` of a list of pairs into the two entries `(τ, θ d)` and
-`(τ, (1 - θ) d)` leaves the earlier entries and partial sums of durations unchanged
-(`List.subdivide_getElem_and_sum_take`).
+Replacing the entry `l[j₁]` of a list by two entries `a`, `b` gives the list
+`l.take j₁ ++ a :: b :: l.drop (j₁ + 1)`. Its length, its entries before, at and after the cut, and
+the partial sums of any function of its entries are recorded here
+(`List.length_take_append_cons_cons`, `List.getElem_take_append_cons_cons_of_lt`,
+`List.getElem_take_append_cons_cons_self`, `List.getElem_take_append_cons_cons_succ`,
+`List.sum_take_map_take_append_cons_cons_of_le`, `List.sum_take_succ_map_take_append_cons_cons`).
 -/
 
 public section
 
 namespace List
 
-/-- Entries and partial sums of durations of the list obtained by subdividing the entry
-`l[j₁] = (τ, d)` at the fraction `θ`: before the cut they are those of `l`, the entry at `j₁` is
-`(τ, θ d)` and the one after it is `(τ, (1 - θ) d)`. -/
-theorem subdivide_getElem_and_sum_take {α : Type*} {l : List (α × ℚ)} {j₁ : ℕ}
-    (hj₁ : j₁ < l.length) {τ : α} {d : ℚ} (hτd : l[j₁] = (τ, d)) (θ : ℚ)
-    {Dp : List (α × ℚ)}
-    (hDp : Dp = l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1)) :
-    Dp.length = l.length + 1 ∧
-      (∀ k (hk : k < Dp.length) (hk' : k < l.length), k < j₁ → Dp[k] = l[k]) ∧
-      (∀ h : j₁ < Dp.length, Dp[j₁] = (τ, θ * d)) ∧
-      (∀ h : j₁ + 1 < Dp.length, Dp[j₁ + 1] = (τ, (1 - θ) * d)) ∧
-      (∀ k (hk : k < Dp.length) (hk' : k < l.length), k ≤ j₁ → Dp[k].1 = l[k].1) ∧
-      (∀ k ≤ j₁, ((Dp.take k).map Prod.snd).sum = ((l.take k).map Prod.snd).sum) ∧
-      ((Dp.take (j₁ + 1)).map Prod.snd).sum = ((l.take j₁).map Prod.snd).sum + θ * d := by
-  subst hDp
-  have hlen_take : (l.take j₁).length = j₁ := by simp; omega
-  have hlt : ∀ k (hk : k < (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1)).length)
-      (hk' : k < l.length), k < j₁ →
-      (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1))[k] = l[k] := by
-    intro k hk hk' hkj
-    rw [List.getElem_append_left (by rw [hlen_take]; omega), List.getElem_take]
-  have hj : ∀ h : j₁ < (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1)).length,
-      (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1))[j₁] = (τ, θ * d) := by
-    intro h
-    rw [List.getElem_append_right (by omega)]
-    simp [hlen_take]
-  refine ⟨by simp; omega, hlt, hj, fun h ↦ ?_, fun k hk hk' hkj ↦ ?_, fun k hk ↦ ?_, ?_⟩
-  · rw [List.getElem_append_right (by omega)]
-    simp [hlen_take]
-  · rcases hkj.lt_or_eq with hkj | rfl
-    · rw [hlt k hk hk' hkj]
-    · rw [hj hk, hτd]
-  · rw [List.take_append_of_le_length (by omega), List.take_take, min_eq_left hk]
-  · rw [List.take_append, List.take_of_length_le (by omega), hlen_take,
-      show j₁ + 1 - j₁ = 1 by omega]
-    simp
+variable {β : Type*} {l : List β} {j₁ : ℕ} {a b : β}
+
+theorem length_take_append_cons_cons (hj₁ : j₁ < l.length) :
+    (l.take j₁ ++ a :: b :: l.drop (j₁ + 1)).length = l.length + 1 := by
+  simp; omega
+
+/-- The entries before the cut are those of `l`. -/
+theorem getElem_take_append_cons_cons_of_lt {k : ℕ} (hj₁ : j₁ < l.length) (hkj : k < j₁)
+    (hk : k < (l.take j₁ ++ a :: b :: l.drop (j₁ + 1)).length) :
+    (l.take j₁ ++ a :: b :: l.drop (j₁ + 1))[k] = l[k]'(by omega) := by
+  have hlen : (l.take j₁).length = j₁ := by simp; omega
+  rw [List.getElem_append_left (by rw [hlen]; omega), List.getElem_take]
+
+/-- The entry at the cut is `a`. -/
+theorem getElem_take_append_cons_cons_self (hj₁ : j₁ < l.length)
+    (h : j₁ < (l.take j₁ ++ a :: b :: l.drop (j₁ + 1)).length) :
+    (l.take j₁ ++ a :: b :: l.drop (j₁ + 1))[j₁] = a := by
+  have hlen : (l.take j₁).length = j₁ := by simp; omega
+  rw [List.getElem_append_right (by omega)]
+  simp [hlen]
+
+/-- The entry after the cut is `b`. -/
+theorem getElem_take_append_cons_cons_succ (hj₁ : j₁ < l.length)
+    (h : j₁ + 1 < (l.take j₁ ++ a :: b :: l.drop (j₁ + 1)).length) :
+    (l.take j₁ ++ a :: b :: l.drop (j₁ + 1))[j₁ + 1] = b := by
+  have hlen : (l.take j₁).length = j₁ := by simp; omega
+  rw [List.getElem_append_right (by omega)]
+  simp [hlen]
+
+/-- Partial sums up to the cut are those of `l`. -/
+theorem sum_take_map_take_append_cons_cons_of_le {M : Type*} [AddCommMonoid M] (f : β → M)
+    (hj₁ : j₁ < l.length) {k : ℕ} (hk : k ≤ j₁) :
+    (((l.take j₁ ++ a :: b :: l.drop (j₁ + 1)).take k).map f).sum = ((l.take k).map f).sum := by
+  have hlen : (l.take j₁).length = j₁ := by simp; omega
+  rw [List.take_append_of_le_length (by omega), List.take_take, show k ⊓ j₁ = k by simp [hk]]
+
+/-- The partial sum through the entry `a` is that of `l` up to the cut plus `f a`. -/
+theorem sum_take_succ_map_take_append_cons_cons {M : Type*} [AddCommMonoid M] (f : β → M)
+    (hj₁ : j₁ < l.length) :
+    (((l.take j₁ ++ a :: b :: l.drop (j₁ + 1)).take (j₁ + 1)).map f).sum =
+      ((l.take j₁).map f).sum + f a := by
+  have hlen : (l.take j₁).length = j₁ := by simp; omega
+  rw [List.take_append, List.take_of_length_le (by omega), hlen,
+    show j₁ + 1 - j₁ = 1 by omega]
+  simp
 
 end List

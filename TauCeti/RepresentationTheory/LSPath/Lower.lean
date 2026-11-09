@@ -196,21 +196,38 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
       ∀ p ∈ Dp.mapIdx (fun k p ↦
           if k₀ ≤ k ∧ k ≤ j₁ then ((weylCoxeterSystem P b).simple i * p.1, p.2) else p),
         (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) p.1 := by
-  obtain ⟨hDp_len, hDp_lt, hDp_j₁, hDp_j₁1, hDp_fst, hcum_le, hcum_j₁1⟩ :=
-    List.subdivide_getElem_and_sum_take hj₁ hτd θ hDp
+  have hDp_len : Dp.length = l.length + 1 := by
+    rw [hDp]; exact List.length_take_append_cons_cons hj₁
+  have hDp_lt (k : ℕ) (hk : k < Dp.length) (hkj : k < j₁) : Dp[k] = l[k]'(by omega) := by
+    subst hDp; exact List.getElem_take_append_cons_cons_of_lt hj₁ hkj hk
+  have hDp_j₁ (h : j₁ < Dp.length) : Dp[j₁] = (τ, θ * d) := by
+    subst hDp; exact List.getElem_take_append_cons_cons_self hj₁ h
+  have hDp_j₁1 (h : j₁ + 1 < Dp.length) : Dp[j₁ + 1] = (τ, (1 - θ) * d) := by
+    subst hDp; exact List.getElem_take_append_cons_cons_succ hj₁ h
+  have hDp_fst (k : ℕ) (hk : k < Dp.length) (hkj : k ≤ j₁) :
+      Dp[k].1 = (l[k]'(by omega)).1 := by
+    rcases hkj.lt_or_eq with hkj | rfl
+    · rw [hDp_lt k hk hkj]
+    · rw [hDp_j₁ hk, hτd]
+  have hcum_le (k : ℕ) (hk : k ≤ j₁) :
+      ((Dp.take k).map Prod.snd).sum = ((l.take k).map Prod.snd).sum := by
+    subst hDp; exact List.sum_take_map_take_append_cons_cons_of_le _ hj₁ hk
+  have hcum_j₁1 : ((Dp.take (j₁ + 1)).map Prod.snd).sum =
+      ((l.take j₁).map Prod.snd).sum + θ * d := by
+    subst hDp; exact List.sum_take_succ_map_take_append_cons_cons Prod.snd hj₁
   obtain ⟨hDp_linked, hDpmin⟩ := Linked.subdivide hl hlmin hj₁ hτd θ
   rw [← hDp] at hDp_linked hDpmin
   -- Reflect the window `[k₀, j₁]` of the subdivided list in `sᵢ`.
   have hW := Linked.mapIdx_simple_mul hlam hDp_linked hDpmin i (k₀ := k₀) (j₁ := j₁)
     (by omega)
     (fun k hk hk₀ hkj ↦ by
-      rw [hDp_fst k hk (by omega) hkj]
+      rw [hDp_fst k hk hkj]
       exact hpos k (by omega) hk₀ hkj)
     (fun k hk hk₀ hkj ↦ by
-      rw [zero_add, hcum_le k hkj, hDp_fst k hk (by omega) hkj]
+      rw [zero_add, hcum_le k hkj, hDp_fst k hk hkj]
       exact hint k (by omega) hk₀ hkj)
     (fun k hk hkk ↦ by
-      rw [hDp_lt k (by omega) (by omega) (by omega)]
+      rw [hDp_lt k (by omega) (by omega)]
       exact hleft k (by omega) hkk)
     (by rw [hDp_j₁1 _, hDp_j₁ _])
     (by
@@ -222,7 +239,7 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
   rw [List.getElem_mapIdx]
   split_ifs with hw
   · refine isMinimalCosetRep_simple_mul_of_coroot'_ne_zero (hDpmin _ (List.getElem_mem hk')) ?_
-    rw [hDp_fst k hk' (by omega) hw.2]
+    rw [hDp_fst k hk' hw.2]
     exact (hpos k (by omega) hw.1 hw.2).ne'
   · exact hDpmin _ (List.getElem_mem hk')
 
@@ -343,8 +360,11 @@ private theorem exists_lower_toPLPath_eq_ofSegments_lowerList (π : LSPath P b l
   have hrise' : ∀ k, k₀ ≤ k → k ≤ j₁ → hgt k < hgt (k + 1) := fun k hk₀ hkj ↦ by
     have := hrise k hk₀ hkj
     rwa [hHF, hHF, Rat.cast_lt] at this
-  have hpos := List.pos_of_rise_sum_take_map_mul (fun w ↦ P.coroot' i (w • lam)) D hdpos hgt
-    (fun _ ↦ rfl) hrise'
+  have hpos : ∀ k (hk : k < D.length), k₀ ≤ k → k ≤ j₁ → 0 < P.coroot' i (D[k].1 • lam) :=
+    fun k hk hk₀ hkj ↦ by
+      have := List.pos_of_sum_take_map_mul_lt_add_one (fun w ↦ (P.coroot' i (w • lam) : ℚ)) D hk
+        (hdpos k hk).le (hrise' k hk₀ hkj)
+      exact_mod_cast this
   have hdH : 0 < d * (P.coroot' i (τ • lam) : ℚ) := by
     have := hpos j₁ hj₁lt hk₀j₁ le_rfl
     rw [hDj₁] at this
@@ -354,7 +374,7 @@ private theorem exists_lower_toPLPath_eq_ofSegments_lowerList (π : LSPath P b l
     have hc := hcross
     rw [hHF, hz, show F ((d : 𝕜) • f (τ • lam)) = ((d * P.coroot' i (τ • lam) : ℚ) : 𝕜) by
       simp [hF]] at hc
-    exact eq_cast_div_of_add_mul_eq hdH.ne' hc
+    exact eq_ratCast_div_of_add_mul_eq (r := (z : ℚ) + 1) hdH.ne' (by exact_mod_cast hc)
   rw [hθ'] at hθpos' hθle' hlow
   have hθpos : 0 < θ := by exact_mod_cast hθpos'
   -- At the vertex `k₀` the height is minimal, so the segment before it does not rise.
@@ -362,8 +382,9 @@ private theorem exists_lower_toPLPath_eq_ofSegments_lowerList (π : LSPath P b l
     have hle := PLPath.listMinHeight_le_apply_sum_take (f := F) (D.map seg) k
     rw [← hminH, hz, hHF] at hle
     exact_mod_cast hle
-  obtain ⟨hint, hleft, hcut⟩ := List.window_facts_of_sum_take_map_mul
-    (fun w ↦ P.coroot' i (w • lam)) D hdpos hk₀j₁ hj₁lt hgt (fun _ ↦ rfl) hgtk₀ hrise' hleftH
+  obtain ⟨hint, hleft, hcut⟩ :=
+    List.not_exists_intCast_and_nonpos_and_exists_intCast_of_sum_take_map_mul
+    (fun w ↦ P.coroot' i (w • lam)) D hdpos hpos hk₀j₁ hj₁lt hgt (fun _ ↦ rfl) hgtk₀ hrise' hleftH
     (fun k hk ↦ π.linked_dirDurations.exists_sum_take_sub_mul_eq_intCast hlam (P.coroot' i) hk)
     hθpos (by rw [hDj₁]; exact div_mul_cancel₀ _ hdH.ne')
   refine ⟨k₀, j₁, hj₁lt, θ, hk₀j₁, hθpos.le, by exact_mod_cast hθle', hpos, hint, hleft, hcut, ?_⟩
