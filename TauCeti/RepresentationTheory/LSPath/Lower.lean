@@ -201,7 +201,7 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
   have hDp_lt (k : ℕ) (hk : k < Dp.length) (hkj : k < j₁) : Dp[k] = l[k]'(by omega) := by
     subst hDp; exact List.getElem_take_append_of_lt hj₁.le hkj hk
   have hDp_j₁ (h : j₁ < Dp.length) : Dp[j₁] = (τ, θ * d) := by
-    subst hDp; exact List.getElem_take_append_cons_cons_self hj₁.le h
+    subst hDp; exact List.getElem_take_append_cons_self hj₁.le h
   have hDp_j₁1 (h : j₁ + 1 < Dp.length) : Dp[j₁ + 1] = (τ, (1 - θ) * d) := by
     subst hDp; exact List.getElem_take_append_cons_cons_succ hj₁.le h
   have hDp_fst (k : ℕ) (hk : k < Dp.length) (hkj : k ≤ j₁) :
@@ -214,7 +214,7 @@ private theorem linked_mapIdx_subdivide (hlam : lam ∈ dominantChamber P b)
     subst hDp; exact List.sum_take_map_take_append_of_le _ hj₁.le hk
   have hcum_j₁1 : ((Dp.take (j₁ + 1)).map Prod.snd).sum =
       ((l.take j₁).map Prod.snd).sum + θ * d := by
-    subst hDp; exact List.sum_take_succ_map_take_append_cons_cons Prod.snd hj₁.le
+    subst hDp; exact List.sum_take_succ_map_take_append_cons Prod.snd hj₁.le
   obtain ⟨hDp_linked, hDpmin⟩ := Linked.subdivide hl hlmin hj₁ hτd θ
   rw [← hDp] at hDp_linked hDpmin
   -- Reflect the window `[k₀, j₁]` of the subdivided list in `sᵢ`.
@@ -383,11 +383,17 @@ private theorem exists_lower_toPLPath_eq_ofSegments_lowerList (π : LSPath P b l
     have hle := PLPath.listMinHeight_le_apply_sum_take (f := F) (D.map seg) k
     rw [← hminH, hz, hHF] at hle
     exact_mod_cast hle
-  obtain ⟨hint, hleft, hcut⟩ :=
-    List.not_exists_intCast_and_nonpos_and_exists_intCast_of_sum_take_map_mul
-    (fun w ↦ P.coroot' i (w • lam)) D hdpos hk₀j₁ hj₁lt hgtk₀ hrise' hleftH
-    (fun k hk ↦ π.linked_dirDurations.exists_sum_take_sub_mul_eq_intCast hlam (P.coroot' i) hk)
-    hθpos (by rw [hDj₁]; exact div_mul_cancel₀ _ hdH.ne')
+  have hθd : θ * (D[j₁].2 * (P.coroot' i (D[j₁].1 • lam) : ℚ)) = z + 1 - hgt j₁ := by
+    rw [hDj₁]; exact div_mul_cancel₀ _ hdH.ne'
+  have hlinked := fun k (hk : k < D.length) ↦
+    π.linked_dirDurations.exists_sum_take_sub_mul_eq_intCast hlam (P.coroot' i) hk
+  have hint := List.not_exists_intCast_sum_take_map_snd_mul (fun w ↦ P.coroot' i (w • lam)) D
+    hdpos hk₀j₁ hj₁lt hgtk₀ hrise' hlinked hθpos hθd
+  have hleft : ∀ k (hk : k < D.length), k + 1 = k₀ → P.coroot' i (D[k].1 • lam) ≤ 0 :=
+    fun k hk hkk ↦ List.nonpos_of_sum_take_map_mul_eq (fun w ↦ P.coroot' i (w • lam)) D hk
+      (hdpos k hk) (hleftH k hkk) (hkk ▸ hgtk₀)
+  have hcut := List.exists_intCast_sum_take_map_snd_add_mul (fun w ↦ P.coroot' i (w • lam)) D
+    hj₁lt (hlinked j₁ hj₁lt) hθd
   refine ⟨k₀, j₁, hj₁lt, θ, hk₀j₁, hθpos.le, by exact_mod_cast hθle', hpos, hint, hleft, hcut, ?_⟩
   rw [hlow, hDj₁, map_segments_lowerList f i F hF D k₀ j₁ τ d θ]
 
