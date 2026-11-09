@@ -302,10 +302,10 @@ theorem Linked.split {t : ℚ} {l₁ l₂ : List (P.weylGroup × ℚ)} {w : P.we
 
 /-- Subdividing an entry `(τ, d)` of a linked list of minimal coset representatives at the fraction
 `θ` of its duration keeps the list linked, and its directions are minimal coset representatives. -/
-theorem Linked.subdivide {lam : M} {l : List (P.weylGroup × ℚ)} (hl : Linked P b lam 0 l)
+theorem Linked.subdivide {lam : M} {t : ℚ} {l : List (P.weylGroup × ℚ)} (hl : Linked P b lam t l)
     (hlmin : ∀ p ∈ l, (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) p.1)
     {j₁ : ℕ} (hj₁ : j₁ < l.length) {τ : P.weylGroup} {d : ℚ} (hτd : l[j₁] = (τ, d)) (θ : ℚ) :
-    Linked P b lam 0 (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1)) ∧
+    Linked P b lam t (l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1)) ∧
       ∀ p ∈ l.take j₁ ++ (τ, θ * d) :: (τ, (1 - θ) * d) :: l.drop (j₁ + 1),
         (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) p.1 := by
   have hτmin : (weylCoxeterSystem P b).IsMinimalCosetRep (P.wallIndices b lam) τ := by

@@ -13,18 +13,18 @@ public import Mathlib.Order.Monotone.Basic
 /-!
 # Values of a sequence rising strictly on a window
 
-If a sequence in a preorder rises strictly on a window `[k₀, j₁]`, starts at `z` and stays below
-`u` at `j₁`, its values strictly inside the window lie strictly between `z` and `u`
-(`TauCeti.lt_and_lt_of_lt_add_one`).
+If a sequence in a preorder satisfies `hgt k < hgt (k + 1)` for `k₀ ≤ k ≤ j₁`, starts at `z` at
+`k₀` and stays below `u` at `j₁`, its values `hgt k` for `k₀ < k ≤ j₁` lie strictly between `z` and
+`u` (`TauCeti.lt_and_lt_of_lt_add_one`).
 -/
 
 public section
 
 namespace TauCeti
 
-/-- If a sequence in a preorder rises strictly on the window `[k₀, j₁]`, starts at `z` there and
-stays below `u` at `j₁`, then its values strictly inside the window lie strictly between `z` and
-`u`. -/
+/-- If a sequence in a preorder satisfies `hgt k < hgt (k + 1)` for `k₀ ≤ k ≤ j₁`, starts at `z`
+at `k₀` and stays below `u` at `j₁`, then its values `hgt k` for `k₀ < k ≤ j₁` lie strictly
+between `z` and `u`. -/
 theorem lt_and_lt_of_lt_add_one {β : Type*} [Preorder β] {hgt : ℕ → β} {k₀ j₁ : ℕ} {z u : β}
     (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ → hgt k < hgt (k + 1)) (hk₀ : hgt k₀ = z)
     (hj₁ : hgt j₁ < u) {k : ℕ} (hk₀k : k₀ < k) (hkj : k ≤ j₁) : z < hgt k ∧ hgt k < u := by
