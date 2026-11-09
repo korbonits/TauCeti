@@ -94,6 +94,12 @@ theorem norm_sub_one_le_norm_sub_one_mul_add {R : Type*} [SeminormedRing R] [Nor
       _ ≤ _ := by gcongr
   nlinarith [mul_nonneg (sub_nonneg.2 hw₂) (sub_nonneg.2 hr), norm_nonneg (w - 1)]
 
+/-- A point within distance `1` of `1` is not `0`. -/
+theorem ne_zero_of_norm_sub_one_lt {R : Type*} [SeminormedRing R] [NormOneClass R] {z : R}
+    (hz : ‖z - 1‖ < 1) : z ≠ 0 := by
+  rintro rfl
+  simp at hz
+
 end TauCeti
 
 end
