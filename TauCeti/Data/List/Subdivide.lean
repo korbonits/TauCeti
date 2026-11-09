@@ -52,14 +52,14 @@ theorem getElem_take_append_cons_cons_succ (hj₁ : j₁ ≤ l.length)
   simp [hlen]
 
 /-- Partial sums up to the cut are those of `l`. -/
-theorem sum_take_map_take_append_of_le {M : Type*} [AddCommMonoid M] (f : β → M)
+theorem sum_take_map_take_append_of_le {M : Type*} [AddMonoid M] (f : β → M)
     (hj₁ : j₁ ≤ l.length) {k : ℕ} (hk : k ≤ j₁) :
     (((l.take j₁ ++ m).take k).map f).sum = ((l.take k).map f).sum := by
   have hlen : (l.take j₁).length = j₁ := by simp; omega
   rw [List.take_append_of_le_length (by omega), List.take_take, show k ⊓ j₁ = k by simp [hk]]
 
 /-- The partial sum through the entry `a` is that of `l` up to the cut plus `f a`. -/
-theorem sum_take_succ_map_take_append_cons {M : Type*} [AddCommMonoid M] (f : β → M)
+theorem sum_take_succ_map_take_append_cons {M : Type*} [AddMonoid M] (f : β → M)
     (hj₁ : j₁ ≤ l.length) :
     (((l.take j₁ ++ a :: m).take (j₁ + 1)).map f).sum =
       ((l.take j₁).map f).sum + f a := by
