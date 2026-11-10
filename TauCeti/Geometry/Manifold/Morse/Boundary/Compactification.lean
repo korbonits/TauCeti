@@ -137,7 +137,7 @@ theorem disjoint_morseTrajectoryPairs_morseBrokenTrajectoryPairs (p r : M) (c₁
 /-- **The unbroken trajectories form a copy of a level slice.** Recording a trajectory from `p`
 to `r` by its point on the level `c₁` identifies the pairs of its points on the levels `c₁` and
 `c₂`, for `f r < c₂ < f p`, with the level slice `W^u(p) ∩ W^s(r) ∩ {f = c₁}`. -/
-theorem exists_homeomorph_morseTrajectoryPairs (hf : MDifferentiable 𝓘(ℝ, E) 𝓘(ℝ) f) {p r : M}
+theorem exists_homeomorph_morseTrajectoryPairs {p r : M}
     (hpr : p ≠ r) {c₁ c₂ : ℝ} (hr₂ : f r < c₂) (h₂p : c₂ < f p) :
     ∃ Φ : hX.morseTrajectoryPairs p r c₁ c₂ ≃ₜ
         ↥(hX.flow.unstableSet p ∩ hX.flow.stableSet r ∩ {y | f y = c₁}),
@@ -145,12 +145,12 @@ theorem exists_homeomorph_morseTrajectoryPairs (hf : MDifferentiable 𝓘(ℝ, E
   -- The orbit of each point of the slice meets the level `c₂` at a unique time `τ y`.
   have hτ (y : ↥(hX.flow.unstableSet p ∩ hX.flow.stableSet r ∩ {y | f y = c₁})) :
       ∃! t, f (hX.flow t y) = c₂ :=
-    hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hf hpr y.2.1 hr₂ h₂p
+    hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hpr y.2.1 hr₂ h₂p
   choose τ hτ' using fun y ↦ (hτ y).exists
   -- The point of the level `c₂` depends continuously on the point of the level `c₁`.
   have hg : Continuous fun y ↦ hX.flow (τ y) (y : M) := by
     refine continuous_iff_continuousAt.2 fun y ↦ ?_
-    obtain ⟨σ, hσ, hlim⟩ := hX.exists_tendsto_flow_of_tendsto hf y.2.1 hr₂ h₂p
+    obtain ⟨σ, hσ, hlim⟩ := hX.exists_tendsto_flow_of_tendsto y.2.1 hr₂ h₂p
       (continuous_subtype_val.tendsto y) (s := τ) hτ'
     rwa [(hτ y).unique hσ (hτ' y)] at hlim
   refine ⟨
@@ -181,19 +181,19 @@ private theorem mem_morseBrokenTrajectorySet' {hX : IsAdaptedPseudoGradient f X}
 /-- Every broken trajectory pair lies on the orbits of the two components of a broken
 trajectory. -/
 private theorem exists_mem_morseBrokenTrajectorySet_of_mem_morseBrokenTrajectoryPairs
-    (hdf : MDifferentiable 𝓘(ℝ, E) 𝓘(ℝ) f) {p r : M} {c₁ c₂ : ℝ} {w : M × M}
+    {p r : M} {c₁ c₂ : ℝ} {w : M × M}
     (hw : w ∈ hX.morseBrokenTrajectoryPairs p r c₁ c₂) :
     ∃ x ∈ hX.morseBrokenTrajectorySet p r, ∃ t₁ t₂ : ℝ,
       hX.flow t₁ w.1 = x.2.1 ∧ hX.flow t₂ w.2 = x.2.2 := by
   obtain ⟨q, hq, hpq, hqr, hy, -, hz, -⟩ := hw
   have hpq' : p ≠ q := by rintro rfl; omega
   have hqr' : q ≠ r := by rintro rfl; omega
-  have hy' := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf hpq' hy
-  have hz' := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf hqr' hz
+  have hy' := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hpq' hy
+  have hz' := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hqr' hz
   -- Move the two points to the middle levels of their components.
-  obtain ⟨t₁, ht₁⟩ := (hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hdf hpq' hy
+  obtain ⟨t₁, ht₁⟩ := (hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hpq' hy
     (c := (f p + f q) / 2) (by linarith [hy'.1, hy'.2]) (by linarith [hy'.1, hy'.2])).exists
-  obtain ⟨t₂, ht₂⟩ := (hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hdf hqr' hz
+  obtain ⟨t₂, ht₂⟩ := (hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hqr' hz
     (c := (f q + f r) / 2) (by linarith [hz'.1, hz'.2]) (by linarith [hz'.1, hz'.2])).exists
   exact ⟨(⟨q, mem_criticalPoints_iff_mfderiv_eq_zero.2 hq⟩, hX.flow t₁ w.1, hX.flow t₂ w.2),
     mem_morseBrokenTrajectorySet'.2 ⟨hpq, hqr,
@@ -203,7 +203,7 @@ private theorem exists_mem_morseBrokenTrajectorySet_of_mem_morseBrokenTrajectory
 /-- **The broken trajectory pairs count the broken trajectories.** Recording a broken index-two
 trajectory by its points on the levels `c₁` and `c₂`, rather than by the points of its two
 components on their middle levels, does not change the number of broken trajectories. -/
-theorem ncard_morseBrokenTrajectoryPairs (hdf : MDifferentiable 𝓘(ℝ, E) 𝓘(ℝ) f)
+theorem ncard_morseBrokenTrajectoryPairs
     (p r : criticalPoints 𝓘(ℝ, E) f) {c₁ c₂ : ℝ} (hr₂ : f r < c₂) (h₁p : c₁ < f p)
     (hgap : ∀ x ∈ criticalPoints 𝓘(ℝ, E) f, f x ∈ Ioo (f r) (f p) → f x ∈ Ioo c₂ c₁) :
     (hX.morseBrokenTrajectoryPairs p r c₁ c₂).ncard = (hX.morseBrokenTrajectorySet p r).ncard := by
@@ -215,12 +215,12 @@ theorem ncard_morseBrokenTrajectoryPairs (hdf : MDifferentiable 𝓘(ℝ, E) �
       (∃ t, f (hX.flow t x.2.1) = c₁) ∧ ∃ t, f (hX.flow t x.2.2) = c₂ := by
     rintro ⟨q, z₁, z₂⟩ hx
     obtain ⟨hpq, hqr, hz₁, hz₂⟩ := mem_morseBrokenTrajectorySet'.1 hx
-    have h₁ := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf (hne hpq) hz₁.1
-    have h₂ := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf (hne hqr) hz₂.1
+    have h₁ := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet (hne hpq) hz₁.1
+    have h₂ := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet (hne hqr) hz₂.1
     have hq := hgap q q.2
       ⟨h₂.1.trans h₂.2, h₁.1.trans h₁.2⟩
-    exact ⟨(hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hdf (hne hpq) hz₁.1 hq.2
-      h₁p).exists, (hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet hdf (hne hqr)
+    exact ⟨(hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet (hne hpq) hz₁.1 hq.2
+      h₁p).exists, (hX.existsUnique_flow_eq_of_mem_unstableSet_inter_stableSet (hne hqr)
       hz₂.1 hr₂ hq.1).exists⟩
   choose! τ₁ hτ₁ using fun x hx ↦ (hcross x hx).1
   choose! τ₂ hτ₂ using fun x hx ↦ (hcross x hx).2
@@ -247,7 +247,7 @@ theorem ncard_morseBrokenTrajectoryPairs (hdf : MDifferentiable 𝓘(ℝ, E) �
       (hX.eq_of_flow_eq_of_value_eq (hne hqr) hz₂.1 heq.2 (hz₂.2.trans hz₂'.2.symm)))
   · intro w hw
     obtain ⟨x, hx, t₁, t₂, ht₁, ht₂⟩ :=
-      hX.exists_mem_morseBrokenTrajectorySet_of_mem_morseBrokenTrajectoryPairs hdf hw
+      hX.exists_mem_morseBrokenTrajectorySet_of_mem_morseBrokenTrajectoryPairs hw
     obtain ⟨q, hq, hpq, hqr, -, hyc, -, hzc⟩ := hw
     obtain ⟨hpq', hqr', hz₁, hz₂⟩ := mem_morseBrokenTrajectorySet'.1 hx
     -- The level points of the two components are the given pair.
@@ -297,7 +297,6 @@ theorem closure_morseTrajectoryPairs_subset {p r : M} (hp : mfderiv 𝓘(ℝ, E)
     (hgap : ∀ x ∈ criticalPoints 𝓘(ℝ, E) f, f x ∈ Ioo (f r) (f p) → f x ∈ Ioo c₂ c₁) :
     closure (hX.morseTrajectoryPairs p r c₁ c₂) ⊆
       hX.morseTrajectoryPairs p r c₁ c₂ ∪ hX.morseBrokenTrajectoryPairs p r c₁ c₂ := by
-  have hdf : MDifferentiable 𝓘(ℝ, E) 𝓘(ℝ) f := hf.contMDiff.mdifferentiable (by simp)
   have := Manifold.metrizableSpace 𝓘(ℝ, E) M
   intro w hw
   obtain ⟨v, hvP, hvw⟩ := mem_closure_iff_seq_limit.1 hw
@@ -314,7 +313,7 @@ theorem closure_morseTrajectoryPairs_subset {p r : M} (hp : mfderiv 𝓘(ℝ, E)
   obtain rfl : y = w.1 := tendsto_nhds_unique hyv (hv₁w.comp hn.tendsto_atTop)
   rcases hcases with hy | ⟨q, z, t, hq, hpq, hqr, hz, hcases⟩
   · -- The limit is unbroken; its second point is where its orbit meets the level `c₂`.
-    obtain ⟨σ, hσ, hlim⟩ := hX.exists_tendsto_flow_of_tendsto hdf hy hr₂
+    obtain ⟨σ, hσ, hlim⟩ := hX.exists_tendsto_flow_of_tendsto hy hr₂
       (h₂₁.trans h₁p) hyv (s := fun k ↦ s (n k)) fun k ↦ (hs (n k)).symm ▸ hv₂ (n k)
     have hw₂ : hX.flow σ w.1 = w.2 := tendsto_nhds_unique hlim (by
       simpa only [Function.comp_def, hs] using hv₂w.comp hn.tendsto_atTop)
@@ -324,10 +323,10 @@ theorem closure_morseTrajectoryPairs_subset {p r : M} (hp : mfderiv 𝓘(ℝ, E)
   have hqc : q ∈ criticalPoints 𝓘(ℝ, E) f := mem_criticalPoints_iff_mfderiv_eq_zero.2 hq
   rcases hcases with ⟨hy, hz', -⟩ | ⟨hy, hz', -⟩
   · -- The level `c₁` is crossed before the break at `q`, and the level `c₂` after it.
-    have hfy := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf hpq' hy
-    have hfz := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf hqr' hz'
+    have hfy := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hpq' hy
+    have hfz := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hqr' hz'
     have hq₂ := (hgap q hqc ⟨hfz.1.trans hfz.2, hfy.2.trans' hfy.1⟩).1
-    obtain ⟨σ, hσ, hlim⟩ := hX.exists_tendsto_flow_of_tendsto hdf hz' hr₂ hq₂ hz
+    obtain ⟨σ, hσ, hlim⟩ := hX.exists_tendsto_flow_of_tendsto hz' hr₂ hq₂ hz
       (s := fun k ↦ s (n k) - t k) fun k ↦ by
         rw [← Flow.map_add, sub_add_cancel, hs, hv₂]
     have hw₂ : hX.flow σ z = w.2 := tendsto_nhds_unique hlim (by
@@ -336,8 +335,8 @@ theorem closure_morseTrajectoryPairs_subset {p r : M} (hp : mfderiv 𝓘(ℝ, E)
     exact Or.inr ⟨q, hq, hpq, hqr, hy, hyc,
       hw₂ ▸ hX.flow.isInvariant_unstableSet_inter_stableSet q r σ hz', hw₂ ▸ hσ⟩
   · -- A point of the level `c₁` cannot lie after the break at `q`, which is below `c₁`.
-    have hfy := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf hqr' hy
-    have hfz := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hdf hpq' hz'
+    have hfy := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hqr' hy
+    have hfz := hX.mem_Ioo_of_mem_unstableSet_inter_stableSet hpq' hz'
     have hq₁ := (hgap q hqc ⟨hfy.1.trans hfy.2, hfz.2.trans' hfz.1⟩).2
     linarith [hfy.2]
 
@@ -383,8 +382,7 @@ theorem exists_nhds_homeomorph_of_mem_morseTrajectoryPairs {p r : M}
     ∃ N ∈ 𝓝 (⟨w, hw⟩ : closure (hX.morseTrajectoryPairs p r c₁ c₂)),
       ∃ V : Set ℝ, IsOpen V ∧ Nonempty (V ≃ₜ N) := by
   have hpr : p ≠ r := by rintro rfl; omega
-  obtain ⟨Φ, hΦ⟩ := hX.exists_homeomorph_morseTrajectoryPairs
-    (hf.contMDiff.mdifferentiable (by simp)) hpr hr₂ (h₂₁.trans h₁p)
+  obtain ⟨Φ, hΦ⟩ := hX.exists_homeomorph_morseTrajectoryPairs hpr hr₂ (h₂₁.trans h₁p)
   -- The level slice is a manifold modelled on a line `L`.
   obtain ⟨L, hL, C, -, -⟩ := h.exists_unstableSet_inter_stableSet_level_isManifold hf hp hr hpr
     ⟨w.1, hwP.1, hwP.2.1⟩
