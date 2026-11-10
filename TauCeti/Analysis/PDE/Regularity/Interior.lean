@@ -129,23 +129,6 @@ theorem divMatrixGradient_def (a : EuclideanSpace ℝ ι → Matrix ι ι ℝ)
     lineDeriv_of_notMem_tsupport (fun h => hx (tsupport_matrixBilinearForm_gradient_subset ψ _ h))
       _
 
-/-- A Lipschitz field `a` is bounded on the support of the gradient of a compactly supported
-`ψ`. -/
-theorem exists_norm_matrixBilinearForm_le_of_gradient_ne_zero
-    (hK : LipschitzWith K fun x => matrixBilinearForm (a x)) {ψ : EuclideanSpace ℝ ι → ℝ}
-    (hψc : HasCompactSupport ψ) :
-    ∃ B : ℝ, 0 ≤ B ∧ ∀ x, ∇ ψ x ≠ 0 → ‖matrixBilinearForm (a x)‖ ≤ B := by
-  have hgc : HasCompactSupport (∇ ψ) :=
-    hψc.mono' fun x hx => by_contra fun h => hx (gradient_of_notMem_tsupport h)
-  obtain ⟨R, hR⟩ := hgc.isCompact.isBounded.subset_closedBall (0 : EuclideanSpace ℝ ι)
-  refine ⟨‖matrixBilinearForm (a 0)‖ + K * max R 0, by positivity, fun x hx => ?_⟩
-  have hxR : ‖x‖ ≤ R := mem_closedBall_zero_iff.1 (hR (subset_tsupport _ hx))
-  have h := hK.dist_le_mul x 0
-  rw [dist_eq_norm, dist_eq_norm, sub_zero] at h
-  have h' := norm_sub_norm_le (matrixBilinearForm (a x)) (matrixBilinearForm (a 0))
-  have h'' : (K : ℝ) * ‖x‖ ≤ K * max R 0 := by gcongr; exact hxR.trans (le_max_left _ _)
-  linarith
-
 /-- For a Lipschitz field `a` and a smooth compactly supported `ψ`, every conormal
 component `y ↦ ⟨η, a(y) ∇ψ(y)⟩` is Lipschitz. -/
 theorem exists_lipschitzWith_matrixBilinearForm_gradient
@@ -157,7 +140,7 @@ theorem exists_lipschitzWith_matrixBilinearForm_gradient
   obtain ⟨Lg, hLg⟩ := (hψ.gradient_right (m := ∞) (by simp)).lipschitzWith_of_hasCompactSupport
     hgc (by simp)
   obtain ⟨N, -, -, hN⟩ := (hψ.of_le (by simp)).exists_abs_le_and_norm_gradient_le hψc
-  obtain ⟨B, hB0, hB⟩ := exists_norm_matrixBilinearForm_le_of_gradient_ne_zero hK hψc
+  obtain ⟨B, hB0, hB⟩ := exists_norm_matrixBilinearForm_le_of_gradient_ne_zero hK.continuous hψc
   have hN0 : 0 ≤ N := (norm_nonneg _).trans (hN 0)
   set C : ℝ := (B * Lg + K * N) * ‖η‖
   have hC0 : 0 ≤ C := by positivity
@@ -436,7 +419,7 @@ theorem memLp_localizedForcing
   obtain ⟨C, hC⟩ := exists_norm_divMatrixGradient_le hK hψ hψc
   have hgψ := ContDiff.continuous_gradient hψ (by simp)
   -- The field is bounded where `∇ ψ` does not vanish, by compactness of the support of `ψ`.
-  obtain ⟨B, hB0, hB⟩ := exists_norm_matrixBilinearForm_le_of_gradient_ne_zero hK hψc
+  obtain ⟨B, hB0, hB⟩ := exists_norm_matrixBilinearForm_le_of_gradient_ne_zero hK.continuous hψc
   have hM' (x : EuclideanSpace ℝ ι) : ‖matrixBilinearForm (a x)‖ * ‖∇ ψ x‖ ≤ B * N := by
     by_cases hx : ∇ ψ x = 0
     · rw [hx, norm_zero, mul_zero]
