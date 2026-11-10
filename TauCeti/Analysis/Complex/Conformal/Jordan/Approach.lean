@@ -159,14 +159,13 @@ variable {f F : ℂ → ℂ} {c : ℂ} {r : ℝ}
 domain.**  Feeds `IsJordanDomain.isPreconnectedApproachAt` into
 `injOn_closedBall_of_isPreconnected_image_approach`. -/
 theorem IsJordanDomain.injOn_closedBall_of_conformal
-    (hr : 0 < r)
     (hfd : DifferentiableOn ℂ f (ball c r))
     (hfi : InjOn f (ball c r))
     (hFc : ContinuousOn F (closedBall c r))
     (hFf : EqOn F f (ball c r))
     (hJ : IsJordanDomain (f '' ball c r)) :
     InjOn F (closedBall c r) :=
-  injOn_closedBall_of_isPreconnected_image_approach hr hfd hfi hFc hFf
+  injOn_closedBall_of_isPreconnected_image_approach hfd hfi hFc hFf
     fun _ ha => hJ.isPreconnectedApproachAt ha
 
 /-- **Boundary injectivity, Jordan case**, in the hypothesis shape of
@@ -183,7 +182,7 @@ theorem injOn_closedBall_of_isJordanCurve_frontier (hr : 0 < r)
         f hf.continuousOn
       isBounded := hb
       isJordanCurve_frontier := hJf }
-  exact hJ.injOn_closedBall_of_conformal hr hf hinj hFc hFf
+  exact hJ.injOn_closedBall_of_conformal hf hinj hFc hFf
 
 /-- **The Riemann map of a Jordan domain extends to a homeomorphism of the
 closures**, with the centre of the disc sent to any prescribed point `p` of the domain. -/
