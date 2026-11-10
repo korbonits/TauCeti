@@ -77,11 +77,30 @@ namespace TauCeti
 
 /-- **Spheres are `(n - 1)`-connected** (Hatcher, Corollary 4.9). For the unit sphere `Sⁿ` of an
 `(n + 1)`-dimensional real normed space, the homotopy set `πₖ(Sⁿ, x)` is trivial for every
-`k = Nat.card N < n`. In degree zero this says that `Sⁿ` is path connected for `n ≥ 1`. -/
+`k = Nat.card N < n`. In degree zero this says that `Sⁿ` is path connected for `n ≥ 1`. For an
+infinite index set `N` the cardinality `Nat.card N` is `0` and the homotopy set is trivial for any
+space, since the boundary of the cube is dense. -/
 theorem subsingleton_homotopyGroup_sphere_of_lt {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] {n : ℕ} (hE : finrank ℝ E = n + 1)
-    {N : Type*} [Finite N] (hN : Nat.card N < n) (x : sphere (0 : E) 1) :
+    {N : Type*} (hN : Nat.card N < n) (x : sphere (0 : E) 1) :
     Subsingleton (HomotopyGroup N (sphere (0 : E) 1) x) := by
+  by_cases hfin : Finite N
+  swap
+  · -- For an infinite index set the boundary of the cube is dense, so every loop is constant.
+    rw [not_finite_iff_infinite] at hfin
+    have hdense : Dense (Cube.boundary N) := fun y ↦ by
+      rw [_root_.mem_closure_iff]
+      intro U hU hyU
+      obtain ⟨s, u, hu, hsU⟩ := isOpen_pi_iff.1 hU y hyU
+      classical
+      obtain ⟨i, hi⟩ := Infinite.exists_notMem_finset s
+      refine ⟨Function.update y i 0, hsU fun a ha ↦ ?_, i, Or.inl (by simp)⟩
+      rw [Function.update_of_ne (by rintro rfl; exact hi (Finset.mem_coe.1 ha))]
+      exact (hu a ha).2
+    have : Subsingleton (GenLoop N (sphere (0 : E) 1) x) := ⟨fun f g ↦ Subtype.ext <|
+      DFunLike.coe_injective <| Continuous.ext_on hdense f.1.continuous g.1.continuous
+        fun y hy ↦ (f.2 y hy).trans (g.2 y hy).symm⟩
+    exact inferInstanceAs (Subsingleton (Quotient (GenLoop.Homotopic.setoid N x)))
   have := Fintype.ofFinite N
   have := Module.finite_of_finrank_eq_succ hE
   obtain ⟨m, rfl⟩ := Nat.exists_eq_add_one_of_ne_zero (n := n) (by omega)
@@ -114,7 +133,7 @@ variable {E : Type} [NormedAddCommGroup E] [InnerProductSpace ℝ E] {n : ℕ}
 /-- `TauCeti.subsingleton_homotopyGroup_sphere_of_lt`, with the dimension read off an orthonormal
 basis. -/
 private theorem subsingleton_homotopyGroup_sphere_of_basis {m : ℕ}
-    (b : OrthonormalBasis (Fin (m + 1)) ℝ E) {N : Type} [Finite N] (hN : Nat.card N < m)
+    (b : OrthonormalBasis (Fin (m + 1)) ℝ E) {N : Type} (hN : Nat.card N < m)
     (x : sphere (0 : E) 1) : Subsingleton (HomotopyGroup N (sphere (0 : E) 1) x) :=
   subsingleton_homotopyGroup_sphere_of_lt (by simp [finrank_eq_card_basis b.toBasis]) hN x
 
