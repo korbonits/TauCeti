@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.Meromorphic.Order
 public import Mathlib.Analysis.RCLike.Basic
+public import Mathlib.Order.Filter.ZeroAndBoundedAtFilter
 import Mathlib.Analysis.Normed.Module.Convex
 
 /-!
@@ -93,5 +94,23 @@ theorem AnalyticOnNhd.meromorphicOrderAt_ne_top_of_forall_mem_sphere_ne_zero
       rw [(hf ζ (sphere_subset_closedBall hζ)).meromorphicOrderAt_eq,
         (hf ζ (sphere_subset_closedBall hζ)).analyticOrderAt_eq_zero.2 (hsphere ζ hζ)]
       exact WithTop.zero_ne_top) hz
+
+section Bounded
+
+variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {E : Type*} [NormedAddCommGroup E]
+  [NormedSpace 𝕜 E] {g : 𝕜 → E} {x : 𝕜}
+
+/-- A function which is meromorphic at `x` and bounded on a punctured neighbourhood of `x` has
+nonnegative meromorphic order at `x`. -/
+theorem MeromorphicAt.meromorphicOrderAt_nonneg_of_boundedAtFilter
+    (hg : MeromorphicAt g x) (hbdd : BoundedAtFilter (𝓝[≠] x) g) :
+    0 ≤ meromorphicOrderAt g x := by
+  by_contra hlt
+  exact Filter.not_isBoundedUnder_of_tendsto_atTop
+    (tendsto_norm_atTop_iff_cobounded.mpr
+      ((tendsto_cobounded_iff_meromorphicOrderAt_neg hg).mpr (not_le.mp hlt)))
+    ((Asymptotics.isBigO_one_iff (F := ℝ)).mp hbdd)
+
+end Bounded
 
 end

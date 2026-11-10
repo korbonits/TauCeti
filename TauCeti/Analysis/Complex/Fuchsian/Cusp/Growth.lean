@@ -7,6 +7,7 @@ module
 
 public import TauCeti.Analysis.Complex.Fuchsian.Cusp.Extension
 public import TauCeti.Analysis.Complex.UpperHalfPlane.Growth
+public import TauCeti.Analysis.Meromorphic.Order
 public import Mathlib.Analysis.Meromorphic.Order
 import Mathlib.NumberTheory.ModularForms.Petersson
 
@@ -60,21 +61,6 @@ public noncomputable section
 
 open Asymptotics Filter Function Matrix.ProjectiveSpecialLinearGroup MulAction UpperHalfPlane
 open scoped Complex.UnitDisc ContDiff Manifold MatrixGroups Topology
-
-namespace TauCeti
-
-/-- A function which is meromorphic at `x` and bounded on a punctured neighbourhood of `x` has
-nonnegative meromorphic order at `x`. -/
-theorem meromorphicOrderAt_nonneg_of_boundedAtFilter {g : ℂ → ℂ} {x : ℂ}
-    (hg : MeromorphicAt g x) (hbdd : BoundedAtFilter (𝓝[≠] x) g) :
-    0 ≤ meromorphicOrderAt g x := by
-  by_contra hlt
-  exact Filter.not_isBoundedUnder_of_tendsto_atTop
-    (tendsto_norm_atTop_iff_cobounded.mpr
-      ((tendsto_cobounded_iff_meromorphicOrderAt_neg hg).mpr (not_le.mp hlt)))
-    ((Asymptotics.isBigO_one_iff (F := ℝ)).mp hbdd)
-
-end TauCeti
 
 namespace TauCeti.Subgroup.CuspDatum
 
@@ -279,7 +265,7 @@ theorem neg_le_meromorphicOrderAt_cuspExtension_of_meromorphicAt (D : Γ.CuspDat
       ((isBoundedAtImInfty_cuspTwist_inv_smul D k f hbound).comp_tendsto
         tendsto_comap_im_ofComplex)
   rw [meromorphicOrderAt_cuspExtension_eq_neg_add_meromorphicOrderAt_twistedExtension D k f hT]
-  exact le_add_of_nonneg_right (meromorphicOrderAt_nonneg_of_boundedAtFilter hT hbdd)
+  exact le_add_of_nonneg_right (hT.meromorphicOrderAt_nonneg_of_boundedAtFilter hbdd)
 
 /-- The meromorphic order of a cusp extension is at least `-k` under the exponential bound
 corresponding to the integer coordinate twist `k`. -/
