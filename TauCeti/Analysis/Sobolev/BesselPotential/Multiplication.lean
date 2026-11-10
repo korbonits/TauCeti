@@ -118,6 +118,7 @@ private theorem eLpNorm_rpow_smul_fourier_eq (s : ℝ) (f : E → F) (hf : Conti
   refine congrArg (· ^ (1 / 2 : ℝ)) (lintegral_congr fun ξ ↦ ?_)
   rw [Real.norm_of_nonneg (by positivity)]
 
+omit [CompleteSpace F] in
 /-- The pointwise Peetre bound behind the `H^s` estimate: for Schwartz functions `φ` and `f`,
 `⟨ξ⟩ ^ s ‖𝓕 (φ f) ξ‖` is bounded by the convolution of `2 ^ (|s| / 2) ⟨·⟩ ^ |s| ‖𝓕 φ‖` with
 `⟨·⟩ ^ s ‖𝓕 f‖`. -/
@@ -151,6 +152,7 @@ private theorem ofReal_rpow_mul_norm_fourier_smulLeftCLM_le (s : ℝ) (φ : 𝓢
               (‖𝓕 φ (ξ - y)‖ * ‖𝓕 f y‖) := by gcongr
         _ = _ := by ring
 
+omit [CompleteSpace F] in
 /-- The `H^s` estimate for multiplication by a Schwartz function, on the Fourier side:
 `‖⟨ξ⟩ ^ s 𝓕 (φ f)‖_{L²} ≤ 2 ^ (|s| / 2) (∫ ⟨ζ⟩ ^ |s| ‖𝓕 φ ζ‖ dζ) ‖⟨ξ⟩ ^ s 𝓕 f‖_{L²}`. It is
 the pointwise Peetre bound followed by Schur's test for the convolution kernel. -/
