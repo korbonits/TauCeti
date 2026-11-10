@@ -56,7 +56,6 @@ theorem Cube.dense_boundary (N : Type*) [Infinite N] : Dense (Cube.boundary N) :
 loops agree on the dense boundary of the cube, hence everywhere. -/
 theorem HomotopyGroup.subsingleton_of_infinite {N X : Type*} [Infinite N] [TopologicalSpace X]
     [T2Space X] (x : X) : Subsingleton (HomotopyGroup N X x) := by
-  have : Subsingleton (GenLoop N X x) := ⟨fun f g ↦ Subtype.ext <|
-    DFunLike.coe_injective <| Continuous.ext_on (Cube.dense_boundary N) f.1.continuous
-      g.1.continuous fun y hy ↦ (f.2 y hy).trans (g.2 y hy).symm⟩
-  exact inferInstanceAs (Subsingleton (Quotient (GenLoop.Homotopic.setoid N x)))
+  refine ⟨Quotient.ind₂ fun f g ↦ congrArg _ (GenLoop.ext f g (congrFun
+    (Continuous.ext_on (Cube.dense_boundary N) (map_continuous f) (map_continuous g)
+      fun y hy ↦ (GenLoop.boundary f y hy).trans (GenLoop.boundary g y hy).symm)))⟩
