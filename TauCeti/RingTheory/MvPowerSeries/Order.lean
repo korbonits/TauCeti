@@ -325,21 +325,37 @@ private theorem coeff_homogeneousComponentPolynomial [CommSemiring R] (n : ℕ)
     (homogeneousComponentPolynomial n Φ).coeff d = if d.degree = n then coeff d Φ else 0 := by
   rw [← MvPolynomial.coeff_coe, coe_homogeneousComponentPolynomial, coeff_homogeneousComponent]
 
-/-- Renaming the variables by an equivalence commutes with taking the degree-`n` polynomial. -/
-theorem rename_homogeneousComponentPolynomial [CommSemiring R] [Finite τ] (e : σ ≃ τ) (n : ℕ)
+/-- Renaming the variables by any map commutes with taking the degree-`n` polynomial. -/
+theorem rename_homogeneousComponentPolynomial [CommSemiring R] [Finite τ] (f : σ → τ) (n : ℕ)
     (Φ : MvPowerSeries σ R) :
-    MvPolynomial.rename e (homogeneousComponentPolynomial n Φ) =
-      homogeneousComponentPolynomial n (rename e Φ) := by
-  ext d'
-  obtain ⟨d, rfl⟩ : ∃ d, Finsupp.mapDomain e d = d' :=
-    ⟨Finsupp.mapDomain e.symm d', by
-      rw [← Finsupp.mapDomain_comp]
-      simp⟩
-  have h := coeff_embDomain_rename e.toEmbedding Φ d
-  rw [Finsupp.embDomain_eq_mapDomain] at h
-  rw [MvPolynomial.coeff_rename_mapDomain e e.injective, coeff_homogeneousComponentPolynomial,
-    coeff_homogeneousComponentPolynomial, Finsupp.degree_mapDomain]
-  exact if_congr Iff.rfl (by simpa using h.symm) rfl
+    MvPolynomial.rename f (homogeneousComponentPolynomial n Φ) =
+      homogeneousComponentPolynomial n (rename f Φ) := by
+  classical
+  ext d
+  -- the coefficient of a renamed polynomial sums the coefficients over the fibre of `mapDomain f`
+  have hrename (p : MvPolynomial σ R) : (MvPolynomial.rename f p).coeff d =
+      (Filter.TendstoCofinite.finite_preimage_singleton (Finsupp.mapDomain f) d).toFinset.sum
+        (p.coeff ·) := by
+    conv_lhs => rw [p.as_sum]
+    simp only [map_sum, MvPolynomial.rename_monomial, MvPolynomial.coeff_sum,
+      MvPolynomial.coeff_monomial]
+    rw [← Finset.sum_filter]
+    refine Finset.sum_subset (fun x hx ↦ ?_) fun x hx hx' ↦ ?_
+    · simp_all
+    · by_contra hc
+      exact hx' (Finset.mem_filter.mpr ⟨MvPolynomial.mem_support_iff.mpr hc, by simpa using hx⟩)
+  rw [hrename, coeff_homogeneousComponentPolynomial, coeff_rename]
+  -- every point of the fibre has the same total degree as `d`
+  have hdeg (x : σ →₀ ℕ) (hx : x ∈ (Filter.TendstoCofinite.finite_preimage_singleton
+      (Finsupp.mapDomain f) d).toFinset) : x.degree = d.degree := by
+    have hx' : Finsupp.mapDomain f x = d := by simpa using hx
+    rw [← hx', Finsupp.degree_mapDomain]
+  split_ifs with hd
+  · refine Finset.sum_congr rfl fun x hx ↦ ?_
+    simp [coeff_homogeneousComponentPolynomial, (hdeg x hx).trans hd]
+  · refine Finset.sum_eq_zero fun x hx ↦ ?_
+    simp only [coeff_homogeneousComponentPolynomial, hdeg x hx]
+    simp [hd]
 
 /-- The degree-`n` part of a series `Φ` in finitely many variables that is invariant under every
 renaming of the variables by a permutation is a symmetric polynomial. -/
