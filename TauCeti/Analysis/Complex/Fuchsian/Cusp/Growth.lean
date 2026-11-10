@@ -156,47 +156,54 @@ theorem analyticAt_twistedExtension_zero (D : Γ.CuspDatum) (k : ℤ) (f : ℍ �
 /-- The value at zero of the twisted extension is the value at infinity of the twisted
 function in the normalized scaling coordinate. -/
 theorem twistedExtension_zero_eq_valueAtInfty (D : Γ.CuspDatum) (k : ℤ) (f : ℍ → ℂ)
-    (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z)
-    (hhol : ∀ᶠ z in atImInfty, MDifferentiableAt 𝓘(ℂ) 𝓘(ℂ) f (D.scaling⁻¹ • z))
-    (hbound : (fun z : ℍ ↦ f (D.scaling⁻¹ • z)) =O[atImInfty]
-      fun z ↦ Real.exp (2 * Real.pi * (k : ℝ) * z.im / D.width)) :
+    (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z) :
     twistedExtension D k f 0 = valueAtInfty (fun z : ℍ ↦
       Function.Periodic.qParam D.width z ^ k * f (D.scaling⁻¹ • z)) := by
-  have han := analyticAt_twistedExtension_zero D k f hf hhol hbound
-  rw [twistedExtension_def, cuspExtension_def] at han ⊢
-  rw [UpperHalfPlane.cuspFunction_apply_zero D.width_pos han
-    (periodic_comp_ofComplex_inv_smul D (cuspTwist D k f) (cuspTwist_smul D k f hf))]
-  congr 1
-  funext z
-  exact cuspTwist_inv_smul D k f z
+  have hmap : Filter.map (fun z : ℍ ↦ Function.Periodic.qParam D.width z) atImInfty =
+      𝓝[≠] 0 := by
+    refine le_antisymm ((Function.Periodic.qParam_tendsto D.width_pos).comp
+      tendsto_coe_atImInfty) fun s hs ↦ ?_
+    obtain ⟨A, hA⟩ := (atImInfty_mem _).mp (mem_map.mp hs)
+    filter_upwards [(Function.Periodic.invQParam_tendsto D.width_pos).eventually
+        (preimage_mem_comap (Ici_mem_atTop (max A 1))), self_mem_nhdsWithin] with q hq hq0
+    have him : 0 < (Function.Periodic.invQParam D.width q).im :=
+      zero_lt_one.trans_le ((le_max_right _ _).trans hq)
+    simpa [Function.Periodic.qParam_right_inv D.width_pos.ne' hq0] using
+      hA ⟨_, him⟩ ((le_max_left _ _).trans hq)
+  have hG : (fun z : ℍ ↦ Function.Periodic.qParam D.width z ^ k * f (D.scaling⁻¹ • z)) =
+      UpperHalfPlane.cuspFunction D.width (fun z ↦ cuspTwist D k f (D.scaling⁻¹ • z)) ∘
+        fun z : ℍ ↦ Function.Periodic.qParam D.width z := by
+    funext z
+    rw [comp_apply, UpperHalfPlane.eq_cuspFunction z D.width_pos.ne'
+      (periodic_comp_ofComplex_inv_smul D (cuspTwist D k f) (cuspTwist_smul D k f hf))]
+    exact (cuspTwist_inv_smul D k f z).symm
+  rw [twistedExtension_def, cuspExtension_def, UpperHalfPlane.cuspFunction,
+    Function.Periodic.cuspFunction_zero_eq_limUnder_nhds_ne, valueAtInfty, hG, ← hmap]
+  rfl
 
 /-- On the punctured unit disc, the original cusp extension is `q⁻ᵏ` times its twisted
 extension. -/
 theorem cuspExtension_eq_zpow_mul_twistedExtension_of_ne_zero_of_norm_lt_one
-    (D : Γ.CuspDatum) (k : ℤ)
-    (f : ℍ → ℂ) (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z)
-    {q : ℂ} (hq : q ≠ 0) (hq_norm : ‖q‖ < 1) :
+    (D : Γ.CuspDatum) (k : ℤ) (f : ℍ → ℂ) {q : ℂ} (hq : q ≠ 0) (hq_norm : ‖q‖ < 1) :
     cuspExtension D f q = q ^ (-k) * twistedExtension D k f q := by
-  obtain ⟨z, hz⟩ := (isOpenQuotientMap_qCoordinate D).surjective
-    (⟨Complex.UnitDisc.mk q hq_norm, fun h ↦ hq (congrArg ((↑) : 𝔻 → ℂ) h)⟩ :
-      {q : 𝔻 // q ≠ 0})
-  have hzq : coordinate D z = q := by
-    rw [← coe_qCoordinate, hz]
-    exact Complex.UnitDisc.coe_mk q hq_norm
-  rw [← hzq, cuspExtension_coordinate D f hf,
-    twistedExtension_coordinate D k f hf]
-  rw [← mul_assoc, ← zpow_add₀ (coordinate_ne_zero D z)]
+  have hpos : 0 < (Function.Periodic.invQParam D.width q).im :=
+    Function.Periodic.im_invQParam_pos_of_norm_lt_one D.width_pos hq_norm hq
+  simp only [twistedExtension_def, cuspExtension_def, UpperHalfPlane.cuspFunction,
+    Function.Periodic.cuspFunction_eq_of_ne_zero _ _ hq]
+  simp only [comp_apply, ofComplex_apply_of_im_pos hpos, cuspTwist_apply, coordinate_inv_smul,
+    UpperHalfPlane.coe_mk, Function.Periodic.qParam_right_inv D.width_pos.ne' hq]
+  rw [← mul_assoc, ← zpow_add₀ hq]
   simp
 
 /-- Near the puncture, the original cusp extension is `q⁻ᵏ` times its twisted extension. -/
 theorem cuspExtension_eventuallyEq_zpow_mul_twistedExtension (D : Γ.CuspDatum) (k : ℤ)
-    (f : ℍ → ℂ) (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z) :
+    (f : ℍ → ℂ) :
     cuspExtension D f =ᶠ[𝓝[≠] 0]
       fun q ↦ q ^ (-k) * twistedExtension D k f q := by
   filter_upwards [eventually_nhdsWithin_of_eventually_nhds
       (Metric.ball_mem_nhds (0 : ℂ) zero_lt_one), self_mem_nhdsWithin]
     with q hq hq_ne
-  exact cuspExtension_eq_zpow_mul_twistedExtension_of_ne_zero_of_norm_lt_one D k f hf hq_ne
+  exact cuspExtension_eq_zpow_mul_twistedExtension_of_ne_zero_of_norm_lt_one D k f hq_ne
     (by simpa only [Metric.mem_ball, dist_zero_right] using hq)
 
 /-- A cusp-invariant function holomorphic sufficiently high and satisfying the exponential bound
@@ -210,18 +217,17 @@ theorem meromorphicAt_cuspExtension_zero (D : Γ.CuspDatum) (k : ℤ) (f : ℍ �
   rw [MeromorphicAt.iff_eventuallyEq_zpow_smul_analyticAt]
   exact ⟨-k, twistedExtension D k f,
     analyticAt_twistedExtension_zero D k f hf hhol hbound,
-    (cuspExtension_eventuallyEq_zpow_mul_twistedExtension D k f hf).mono
+    (cuspExtension_eventuallyEq_zpow_mul_twistedExtension D k f).mono
       fun q hq ↦ by simpa only [sub_zero, smul_eq_mul] using hq⟩
 
 /-- Twisting by `q^k` adds `k` to the cusp order. When the twisted extension is analytic
 at zero, the remaining order is its analytic order, including infinite order. -/
 theorem meromorphicOrderAt_cuspExtension_eq_neg_add_analyticOrderAt_twistedExtension
-    (D : Γ.CuspDatum) (k : ℤ)
-    (f : ℍ → ℂ) (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z)
+    (D : Γ.CuspDatum) (k : ℤ) (f : ℍ → ℂ)
     (han : AnalyticAt ℂ (twistedExtension D k f) 0) :
     meromorphicOrderAt (cuspExtension D f) 0 =
       ((-k : ℤ) : WithTop ℤ) + (analyticOrderAt (twistedExtension D k f) 0).map Nat.cast := by
-  have hrepr := cuspExtension_eventuallyEq_zpow_mul_twistedExtension D k f hf
+  have hrepr := cuspExtension_eventuallyEq_zpow_mul_twistedExtension D k f
   have hfun : (fun q : ℂ ↦ q ^ (-k) * twistedExtension D k f q) =
       id ^ (-k) * twistedExtension D k f := by
     funext q
@@ -240,7 +246,7 @@ theorem neg_le_meromorphicOrderAt_cuspExtension (D : Γ.CuspDatum) (k : ℤ)
       fun z ↦ Real.exp (2 * Real.pi * (k : ℝ) * z.im / D.width)) :
     ((-k : ℤ) : WithTop ℤ) ≤ meromorphicOrderAt (cuspExtension D f) 0 := by
   have han := analyticAt_twistedExtension_zero D k f hf hhol hbound
-  rw [meromorphicOrderAt_cuspExtension_eq_neg_add_analyticOrderAt_twistedExtension D k f hf han,
+  rw [meromorphicOrderAt_cuspExtension_eq_neg_add_analyticOrderAt_twistedExtension D k f han,
     ← han.meromorphicOrderAt_eq]
   exact le_add_of_nonneg_right han.meromorphicOrderAt_nonneg
 
@@ -326,13 +332,43 @@ theorem meromorphicAt_cuspExtension_zero_iff (D : Γ.CuspDatum)
 /-- Exponential growth of rate at most `2πn / w` forces the meromorphic order of the cusp
 extension to be at least `-n`; equivalently, its pole order is at most `n`. -/
 theorem neg_natCast_le_meromorphicOrderAt_cuspExtension (D : Γ.CuspDatum) (n : ℕ)
-    (f : ℍ → ℂ) (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z)
-    (hhol : ∀ᶠ z in atImInfty, MDifferentiableAt 𝓘(ℂ) 𝓘(ℂ) f (D.scaling⁻¹ • z))
+    (f : ℍ → ℂ)
     (hgrowth : (fun z : ℍ ↦ f (D.scaling⁻¹ • z)) =O[atImInfty]
       fun z ↦ Real.exp (2 * Real.pi * n * z.im / D.width)) :
     (-(n : ℤ) : WithTop ℤ) ≤ meromorphicOrderAt (cuspExtension D f) 0 := by
-  apply neg_le_meromorphicOrderAt_cuspExtension D (n : ℤ) f hf hhol
-  simpa only [Int.cast_natCast] using hgrowth
+  by_cases hmero : MeromorphicAt (cuspExtension D f) 0
+  swap
+  · rw [meromorphicOrderAt_of_not_meromorphicAt hmero]
+    exact_mod_cast (by omega : -(n : ℤ) ≤ 0)
+  have hbound : (fun z : ℍ ↦ f (D.scaling⁻¹ • z)) =O[atImInfty]
+      fun z ↦ Real.exp (2 * Real.pi * ((n : ℤ) : ℝ) * z.im / D.width) := by
+    simpa only [Int.cast_natCast] using hgrowth
+  have hrepr := cuspExtension_eventuallyEq_zpow_mul_twistedExtension D (n : ℤ) f
+  have hT : MeromorphicAt (twistedExtension D (n : ℤ) f) 0 := by
+    refine ((MeromorphicAt.id 0).zpow (n : ℤ) |>.mul hmero).congr ?_
+    filter_upwards [hrepr, self_mem_nhdsWithin] with q hq hq0
+    simp only [Pi.mul_apply, Pi.pow_apply, id_eq]
+    rw [hq, ← mul_assoc, ← zpow_add₀ hq0]
+    simp
+  have hbdd : BoundedAtFilter (𝓝[≠] 0) (twistedExtension D (n : ℤ) f) := by
+    rw [twistedExtension_def, cuspExtension_def]
+    exact Function.Periodic.boundedAtFilter_cuspFunction D.width_pos
+      ((isBoundedAtImInfty_cuspTwist_inv_smul D (n : ℤ) f hbound).comp_tendsto
+        tendsto_comap_im_ofComplex)
+  have hnonneg : 0 ≤ meromorphicOrderAt (twistedExtension D (n : ℤ) f) 0 := by
+    by_contra hlt
+    exact Filter.not_isBoundedUnder_of_tendsto_atTop
+      (tendsto_norm_atTop_iff_cobounded.mpr
+        ((tendsto_cobounded_iff_meromorphicOrderAt_neg hT).mpr (not_le.mp hlt)))
+      ((Asymptotics.isBigO_one_iff (F := ℝ)).mp hbdd)
+  have hfun : (fun q : ℂ ↦ q ^ (-(n : ℤ)) * twistedExtension D (n : ℤ) f q) =
+      id ^ (-(n : ℤ)) * twistedExtension D (n : ℤ) f := by
+    funext q
+    simp only [Pi.mul_apply, Pi.pow_apply, id_eq]
+  rw [meromorphicOrderAt_congr hrepr, hfun,
+    meromorphicOrderAt_mul ((MeromorphicAt.id 0).zpow (-(n : ℤ))) hT,
+    meromorphicOrderAt_zpow (MeromorphicAt.id 0), meromorphicOrderAt_id, mul_one]
+  exact le_add_of_nonneg_right hnonneg
 
 /-! ## Controlled zeros -/
 
@@ -372,7 +408,7 @@ theorem analyticAt_cuspExtension_zero_of_isBigO_exp_neg (D : Γ.CuspDatum) (n : 
       apply ((analyticAt_id.pow (n + 1)).mul han).congr
       filter_upwards [eventually_nhdsWithin_iff.mp
           (cuspExtension_eventuallyEq_zpow_mul_twistedExtension
-            D (-((n + 1 : ℕ) : ℤ)) f hf).symm]
+            D (-((n + 1 : ℕ) : ℤ)) f).symm]
         with q hq
       by_cases hq0 : q = 0
       · subst q
