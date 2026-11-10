@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Algebra.Order.Field.Basic
 public import Mathlib.LinearAlgebra.Orientation
+import TauCeti.LinearAlgebra.Dimension.CardEqFinrank
 import TauCeti.LinearAlgebra.Ray
 
 /-!
@@ -130,13 +131,6 @@ section Field
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
   {M : Type*} [AddCommGroup M] [Module R M] {ι : Type*} [Fintype ι]
 
-omit [LinearOrder R] [IsStrictOrderedRing R] in
-/-- An index type whose cardinality equals the `finrank` of an infinite-dimensional space is
-empty, since `finrank` is `0` there. -/
-private theorem isEmpty_of_card_eq_finrank_of_not_finiteDimensional
-    (h : Fintype.card ι = finrank R M) (hfd : ¬ FiniteDimensional R M) : IsEmpty ι :=
-  Fintype.card_eq_zero_iff.1 (h.trans (Module.finrank_of_not_finite hfd))
-
 /-- When the index type has cardinality equal to the `finrank`, a linear self-equivalence
 transports an orientation to its multiple by the inverse determinant. Unlike
 `Orientation.map_eq_det_inv_smul`, this needs no finite-dimensionality: otherwise `ι` is empty and
@@ -146,7 +140,7 @@ theorem Orientation.map_eq_det_inv_smul_of_card_eq_finrank (x : Orientation R M 
     Orientation.map ι f x = (LinearEquiv.det f)⁻¹ • x := by
   by_cases hfd : FiniteDimensional R M
   · exact map_eq_det_inv_smul x f h
-  · have := isEmpty_of_card_eq_finrank_of_not_finiteDimensional h hfd
+  · have := Module.isEmpty_of_card_eq_finrank_of_not_finite h hfd
     have hdet : LinearEquiv.det f = 1 :=
       Units.ext (by rw [LinearEquiv.coe_det]; exact LinearMap.det_eq_one_of_not_module_finite hfd _)
     rw [map_of_isEmpty, hdet, inv_one, one_smul]
@@ -165,7 +159,7 @@ theorem Orientation.eq_or_eq_neg_of_card_eq_finrank (x₁ x₂ : Orientation R M
     (h : Fintype.card ι = finrank R M) : x₁ = x₂ ∨ x₁ = -x₂ := by
   by_cases hfd : FiniteDimensional R M
   · exact eq_or_eq_neg x₁ x₂ h
-  · have := isEmpty_of_card_eq_finrank_of_not_finiteDimensional h hfd
+  · have := Module.isEmpty_of_card_eq_finrank_of_not_finite h hfd
     rcases eq_or_eq_neg_of_isEmpty x₁ with h₁ | h₁ <;>
       rcases eq_or_eq_neg_of_isEmpty x₂ with h₂ | h₂ <;>
       first | (simp [h₁, h₂]; done) | exact Or.inr (by
