@@ -60,26 +60,33 @@ namespace TauCeti
 
 namespace Probability
 
-/-- The real-valued mass of an event under a finite uniform measure is the ratio of its
+/-- The real-valued mass of an event under a uniform measure is the ratio of its
 cardinality to the cardinality of the sampling set. This also covers the zero measure when
-the sampling set is empty. -/
-theorem uniformOn_toReal {Ω : Type*} [Finite Ω] [MeasurableSpace Ω]
+the sampling set is empty or infinite. -/
+theorem uniformOn_toReal {Ω : Type*} [MeasurableSpace Ω]
     [MeasurableSingletonClass Ω] (S T : Set Ω) :
     (uniformOn S T).toReal =
       (Nat.card {x : Ω // x ∈ S ∩ T} : ℝ) /
         (Nat.card {x : Ω // x ∈ S} : ℝ) := by
   classical
-  cases nonempty_fintype Ω
-  let s : Finset Ω := S.toFinite.toFinset
-  let t : Finset Ω := T.toFinite.toFinset
-  have hs : (s : Set Ω) = S := by simp [s]
-  have ht : (t : Set Ω) = T := by simp [t]
-  rw [← hs, ← ht, uniformOn_apply_finset, ENNReal.toReal_div]
-  have hcard (U : Set Ω) : Nat.card {x : Ω // x ∈ U} = U.ncard := by
-    rw [Nat.card_eq_fintype_card, Set.fintypeCard_eq_ncard]
-  rw [hcard, hcard, ← Finset.coe_inter, Set.ncard_coe_finset,
-    Set.ncard_coe_finset]
-  simp only [ENNReal.toReal_natCast]
+  by_cases hS : S.Finite
+  · let s : Finset Ω := hS.toFinset
+    let t : Finset Ω := (hS.inter_of_left T).toFinset
+    have hs : (s : Set Ω) = S := by simp [s]
+    have ht : (t : Set Ω) = S ∩ T := by simp [t]
+    rw [← uniformOn_inter_self hS, ← ht, ← hs, uniformOn_apply_finset, ENNReal.toReal_div]
+    have hcard (U : Set Ω) : Nat.card {x : Ω // x ∈ U} = U.ncard := rfl
+    have hst : s ∩ t = t :=
+      Finset.inter_eq_right.2 (by rw [← Finset.coe_subset, hs, ht]; exact Set.inter_subset_left)
+    rw [hst, hcard, hcard, Set.ncard_coe_finset, Set.ncard_coe_finset]
+    simp only [ENNReal.toReal_natCast]
+  · have h0 : uniformOn S T = 0 := by
+      by_contra h
+      exact hS (finite_of_uniformOn_ne_zero h)
+    have : Nat.card {x : Ω // x ∈ S} = 0 := by
+      have : Infinite {x : Ω // x ∈ S} := Set.infinite_coe_iff.2 hS
+      exact Nat.card_eq_zero_of_infinite
+    simp [h0, this]
 
 variable {ι κ : Type*}
 
@@ -290,12 +297,20 @@ theorem uniformOn_le_univ_add_compl {Ω : Type*} [Finite Ω] [MeasurableSpace Ω
 /-- Conditioning a finite uniform sample on an event `E` can decrease the probability of an event
 `A` by at most the original probability of `Eᶜ`, provided `E` is nonempty.  When `E` is empty,
 Mathlib's `uniformOn E` is the zero measure and the inequality remains valid under that convention.
+The same holds when `Ω` is infinite, where `uniformOn Set.univ` is the zero measure.
 
 This is the lower half of the elementary coupling bound between a uniform law and its
 conditioning. -/
-theorem uniformOn_univ_le_add_compl {Ω : Type*} [Finite Ω] [MeasurableSpace Ω]
+theorem uniformOn_univ_le_add_compl {Ω : Type*} [MeasurableSpace Ω]
     [MeasurableSingletonClass Ω] (E A : Set Ω) :
     uniformOn Set.univ A ≤ uniformOn E A + uniformOn Set.univ Eᶜ := by
+  rcases finite_or_infinite Ω with hΩ | hΩ
+  swap
+  · have h0 : uniformOn Set.univ A = 0 := by
+      by_contra h
+      exact (Set.infinite_univ (α := Ω)) (finite_of_uniformOn_ne_zero h)
+    rw [h0]
+    exact zero_le
   rw [← uniformOn_add_compl_eq E A Set.finite_univ]
   simp only [Set.univ_inter]
   exact add_le_add (mul_le_of_le_one_right bot_le prob_le_one)
@@ -306,22 +321,28 @@ collision event: for every event `A`, the former is at most the latter plus the 
 
 When an injective map `ι → κ` exists, these are the probabilities for uniform sampling without and
 with replacement, respectively.  The inequality also holds when the set of injective maps is empty,
-in which case its `uniformOn` measure is zero. -/
-theorem uniformOn_injective_le_add [Finite ι] [Finite κ] [MeasurableSpace κ]
+in which case its `uniformOn` measure is zero; this includes an infinite index type `ι`. -/
+theorem uniformOn_injective_le_add [Finite κ] [MeasurableSpace κ]
     [MeasurableSingletonClass κ]
     (A : Set (ι → κ)) :
     uniformOn {x : ι → κ | Function.Injective x} A ≤
       uniformOn Set.univ A + uniformOn Set.univ {x : ι → κ | ¬Function.Injective x} := by
-  simpa only [Set.compl_ofPred] using
-    uniformOn_le_univ_add_compl {x : ι → κ | Function.Injective x} A
+  rcases finite_or_infinite ι with hι | hι
+  · simpa only [Set.compl_ofPred] using
+      uniformOn_le_univ_add_compl {x : ι → κ | Function.Injective x} A
+  · have : {x : ι → κ | Function.Injective x} = ∅ :=
+      Set.eq_empty_of_forall_notMem fun f hf ↦ not_injective_infinite_finite f hf
+    rw [this, uniformOn_empty_meas]
+    exact zero_le
 
 /-- The uniform measure on all maps differs from the uniform measure on injective maps only on the
 collision event: for every event `A`, the former is at most the latter plus the collision measure.
 
 When an injective map `ι → κ` exists, these are the probabilities for uniform sampling with and
 without replacement, respectively.  The inequality also holds when the set of injective maps is
-empty, in which case its `uniformOn` measure is zero. -/
-theorem uniformOn_univ_le_injective_add [Finite ι] [Finite κ] [MeasurableSpace κ]
+empty, in which case its `uniformOn` measure is zero, and when the function space is infinite, in
+which case `uniformOn Set.univ` is the zero measure. -/
+theorem uniformOn_univ_le_injective_add [Finite ι] [MeasurableSpace κ]
     [MeasurableSingletonClass κ]
     (A : Set (ι → κ)) :
     uniformOn Set.univ A ≤ uniformOn {x : ι → κ | Function.Injective x} A +
