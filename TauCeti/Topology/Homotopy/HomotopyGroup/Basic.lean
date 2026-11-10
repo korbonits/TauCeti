@@ -6,6 +6,7 @@ Authors: The Tau Ceti contributors
 module
 
 public import Mathlib.Topology.Homotopy.HomotopyGroup
+public import TauCeti.Topology.Homotopy.Cube.Basic
 
 /-!
 # Basic properties of homotopy groups
@@ -13,8 +14,8 @@ public import Mathlib.Topology.Homotopy.HomotopyGroup
 A pointed space is path connected if and only if its zeroth homotopy set is a subsingleton.
 This follows from Mathlib's equivalence between the zeroth homotopy set and path components.
 
-For an infinite index set the boundary of the cube is dense, so a generalized loop into a
-Hausdorff space is determined by its boundary values: there is only one generalized loop and the
+For an infinite index set the boundary of the cube is dense (`Cube.dense_boundary`), so a
+generalized loop into a `T1` space is constant: there is only one generalized loop and the
 homotopy set is trivial. Both facts are instances (`GenLoop.subsingleton_of_infinite`,
 `HomotopyGroup.subsingleton_of_infinite`).
 -/
@@ -39,30 +40,19 @@ theorem pathConnectedSpace_iff_subsingleton_homotopyGroup_zero (x : X) :
 
 end TauCeti
 
-open scoped unitInterval
-
-/-- **The boundary of a cube indexed by an infinite set is dense**: a basic open set constrains
-only finitely many coordinates, so it meets the boundary through a free coordinate set to `0`. -/
-theorem Cube.dense_boundary (N : Type*) [Infinite N] : Dense (Cube.boundary N) := fun y ↦ by
-  rw [mem_closure_iff]
-  intro U hU hyU
-  obtain ⟨s, u, hu, hsU⟩ := isOpen_pi_iff.1 hU y hyU
-  classical
-  obtain ⟨i, hi⟩ := Infinite.exists_notMem_finset s
-  refine ⟨Function.update y i 0, hsU fun a ha ↦ ?_, i, Or.inl (by simp)⟩
-  rw [Function.update_of_ne (by rintro rfl; exact hi (Finset.mem_coe.1 ha))]
-  exact (hu a ha).2
-
-/-- **Generalized loops indexed by an infinite set are constant** in a Hausdorff space: two
-generalized loops agree on the dense boundary of the cube, hence everywhere. -/
+open scoped unitInterval in
+/-- **Generalized loops indexed by an infinite set are constant** in a `T1` space: such a loop is
+the base point on the dense boundary of the cube, and the fiber over the base point is closed. -/
 instance GenLoop.subsingleton_of_infinite {N X : Type*} [Infinite N] [TopologicalSpace X]
-    [T2Space X] {x : X} : Subsingleton (Ω^ N X x) :=
-  ⟨fun f g ↦ GenLoop.ext f g (congrFun
-    (Continuous.ext_on (Cube.dense_boundary N) (map_continuous f) (map_continuous g)
-      fun y hy ↦ (GenLoop.boundary f y hy).trans (GenLoop.boundary g y hy).symm))⟩
+    [T1Space X] {x : X} : Subsingleton (Ω^ N X x) :=
+  have hconst (f : Ω^ N X x) (y : I^N) : f y = x :=
+    closure_minimal (s := Cube.boundary N) (t := ⇑f ⁻¹' {x})
+      (fun y hy ↦ GenLoop.boundary f y hy) (isClosed_singleton.preimage (map_continuous f))
+      ((Cube.dense_boundary N) y)
+  ⟨fun f g ↦ GenLoop.ext f g fun y ↦ (hconst f y).trans (hconst g y).symm⟩
 
-/-- **Homotopy sets indexed by an infinite set are trivial** for Hausdorff spaces, since there is
+/-- **Homotopy sets indexed by an infinite set are trivial** for `T1` spaces, since there is
 only one generalized loop (`GenLoop.subsingleton_of_infinite`). -/
 instance HomotopyGroup.subsingleton_of_infinite {N X : Type*} [Infinite N] [TopologicalSpace X]
-    [T2Space X] {x : X} : Subsingleton (HomotopyGroup N X x) :=
-  ⟨Quotient.ind₂ fun f g ↦ congrArg _ (Subsingleton.elim f g)⟩
+    [T1Space X] {x : X} : Subsingleton (HomotopyGroup N X x) :=
+  inferInstanceAs (Subsingleton (Quotient (GenLoop.Homotopic.setoid N x)))
