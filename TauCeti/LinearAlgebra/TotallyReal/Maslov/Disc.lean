@@ -11,7 +11,7 @@ public import TauCeti.LinearAlgebra.TotallyReal.Maslov.Prod
 /-!
 # The boundary Maslov index on the disc
 
-Let `E` be a finite-dimensional complex normed space. A bundle pair `(E, F)` over the closed unit
+Let `E` be a complex normed space. A bundle pair `(E, F)` over the closed unit
 disc `D` is a complex vector bundle over `D` together with a maximal totally real subbundle `F`
 of its restriction to the boundary circle, that is, a totally real subbundle whose real rank is
 the complex rank of the bundle. Every complex bundle over `D` is trivial, and in a
