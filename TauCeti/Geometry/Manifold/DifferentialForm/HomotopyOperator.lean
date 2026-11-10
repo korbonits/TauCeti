@@ -287,7 +287,7 @@ private theorem inChartAt_homotopyOperator [IsManifold I 1 M] (x₀ : M) {s : Se
         refine intervalIntegral.integral_congr fun t ht ↦ ?_
         rw [uIcc_of_le zero_le_one] at ht
         rw [hL, curryLeft_mpullbackWithin_cylinder x₀ hs hsu ψ hy ht]
-        exact congrArg _ (mfderivWithin_extChartAt_symm_of_subset x₀ hs hsu hy).symm
+        exact congrArg _ (mfderivWithin_extChartAt_symm_of_subset x₀ hs hy (hsu y hy)).symm
 
 /-- The cylinder chart over a subset of the chart target is as smooth as the manifold. -/
 private theorem contMDiffOn_cylinderChart {n : WithTop ℕ∞} [IsManifold I n M] (x₀ : M) {s : Set E}
@@ -323,7 +323,7 @@ private theorem compContinuousLinearMap_inl_mpullbackWithin_cylinder [IsManifold
       mpullback I (I.prod (𝓡∂ 1)) (fun x ↦ (x, t)) φ x₀ := by
   have hD : mfderivWithin 𝓘(ℝ, E) I (extChartAt I x₀).symm s (extChartAt I x₀ x₀) =
       ContinuousLinearMap.id ℝ E :=
-    (mfderivWithin_extChartAt_symm_of_subset x₀ hs hsu hx).trans
+    (mfderivWithin_extChartAt_symm_of_subset x₀ hs hx (hsu _ hx)).trans
       (mfderivWithin_range_extChartAt_symm (I := I) (x := x₀))
   have hpt : cylinderChart I x₀ (extChartAt I x₀ x₀, (t : ℝ)) = (x₀, t) := by
     rw [cylinderChart_apply, extChartAt_to_inv, projIcc_val]
