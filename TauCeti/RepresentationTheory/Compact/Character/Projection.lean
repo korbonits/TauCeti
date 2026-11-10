@@ -7,6 +7,7 @@ module
 
 public import TauCeti.RepresentationTheory.Compact.Character.Basic
 public import TauCeti.RepresentationTheory.Compact.Integrated
+public import TauCeti.RepresentationTheory.Compact.UnitaryModel
 import TauCeti.RepresentationTheory.Irreducible
 
 /-!
@@ -112,10 +113,11 @@ theorem integral_star_character_mul_character :
   rw [ContinuousMap.star_apply, RCLike.star_def, mul_comm]
 
 include hρ in
-omit [IsAlgClosed 𝕜] in
+omit [IsAlgClosed 𝕜] [NormedSpace ℝ V] [SMulCommClass ℝ 𝕜 V] [FiniteDimensional 𝕜 W] in
 /-- **The character projection kills an inequivalent representation.** If `π` is unitary and there
 is no nonzero continuous intertwiner `ρ → π`, the conjugate character of `π` acts as zero on `ρ`.
-Neither irreducibility of `ρ` nor algebraic closedness of `𝕜` is assumed.
+Neither irreducibility of `ρ`, algebraic closedness of `𝕜` nor finite-dimensionality of `W`
+is assumed.
 
 Schur's lemma is not invoked for the intertwiner hypothesis; it is what supplies it for a pair of
 inequivalent irreducibles. -/
@@ -127,8 +129,15 @@ theorem integratedOperator_star_character_eq_zero (hunitary : IsUnitary π)
   -- orthogonality relation (`ContRepresentation.schur_orthogonality_distinct`) summed over
   -- the diagonal matrix coefficients that make up `conj χ_π`
   -- (`ContRepresentation.star_character`).
+  let _ : NormedSpace ℝ V := NormedSpace.restrictScalars ℝ 𝕜 V
+  have _ : SMulCommClass ℝ 𝕜 V := inferInstance
   refine ContinuousLinearMap.ext fun v ↦ ?_
+  by_cases hW : CompleteSpace W
+  swap
+  · rw [integratedOperator_apply, integral_of_not_completeSpace hW]
+    rfl
   have key : ∀ w, ⟪w, integratedOperator ρ hρ (star (character π hπ)) v⟫_𝕜 = 0 := by
+    have _ := hW
     intro w
     have hint : Integrable (fun g ↦ (star (character π hπ)) g • ρ g v) (haarProb G) :=
       integrable_continuousMap G ⟨fun g ↦ (star (character π hπ)) g • ρ g v,
@@ -148,35 +157,48 @@ theorem integratedOperator_star_character_eq_zero (hunitary : IsUnitary π)
   simpa using inner_self_eq_zero.mp (key _)
 
 /-- **The conjugate character acts on its own representation by the inverse dimension.** For a
-finite-dimensional irreducible unitary representation of dimension `d`, the integrated operator of
-`conj χ_π` on `V_π` is `d⁻¹ • id`.
+finite-dimensional irreducible representation of dimension `d`, the integrated operator of
+`conj χ_π` on `V_π` is `d⁻¹ • id`. No unitarity is assumed: `π` is conjugate to a unitary
+representation (`ContRepresentation.exists_isUnitary_congr`), which has the same character.
 
 The scalar is `d⁻¹` rather than `1` exactly because the character has `L²` norm one: the projection
 kernel that acts as the identity is `d · conj χ_π`, which is
 `ContRepresentation.finrank_smul_integratedOperator_star_character_self`. -/
-theorem integratedOperator_star_character_self (hunitary : IsUnitary π)
+theorem integratedOperator_star_character_self
     (hirr : Representation.IsIrreducible π.toRepresentation) :
     integratedOperator π hπ (star (character π hπ))
       = (Module.finrank 𝕜 V : 𝕜)⁻¹ • ContinuousLinearMap.id 𝕜 V := by
+  obtain ⟨e, he⟩ := exists_isUnitary_congr π hπ
+  have hχ : character (ContinuousLinearEquiv.congr e π)
+      (ContinuousLinearEquiv.continuous_congr e hπ) = character π hπ := by
+    ext g
+    have hconj : ((ContinuousLinearEquiv.congr e π g : V →L[𝕜] V) : V →ₗ[𝕜] V) =
+        e.toLinearEquiv.conj (π g : V →ₗ[𝕜] V) :=
+      LinearMap.ext fun x ↦ ContinuousLinearEquiv.congr_apply e π g x
+    rw [character_apply, character_apply, hconj]
+    exact LinearMap.trace_conj' (π g : V →ₗ[𝕜] V) e.toLinearEquiv
+  have horth := character_orthonormal_self (ContinuousLinearEquiv.congr e π)
+    (ContinuousLinearEquiv.continuous_congr e hπ) he
+    (ContinuousLinearEquiv.isIrreducible_congr e hirr)
+  rw [characterLp_def, hχ, ← characterLp_def] at horth
   rw [integratedOperator_eq_smul_id π hπ (star_character_conj π hπ) hirr,
-    integral_star_character_mul_character π hπ π hπ,
-    character_orthonormal_self π hπ hunitary hirr, mul_one]
+    integral_star_character_mul_character π hπ π hπ, horth, mul_one]
 
-/-- **The block projection, normalized.** For a finite-dimensional irreducible unitary `π`, the
+/-- **The block projection, normalized.** For a finite-dimensional irreducible `π`, the
 kernel `dim V_π · conj χ_π` acts as the identity on `V_π`; together with
 `ContRepresentation.integratedOperator_star_character_eq_zero`, which makes it act as zero
-on a representation with no nonzero intertwiner into `π`, these are the two blockwise identities
-that characterize the isotypic projector attached to `π`. Assembling them into a
+on a representation with no nonzero intertwiner into the unitary `π`, these are the two blockwise
+identities that characterize the isotypic projector attached to `π`. Assembling them into a
 projector on a reducible representation is done in
 `TauCeti/RepresentationTheory/Compact/Character/IsotypicProjection.lean`. -/
-theorem finrank_smul_integratedOperator_star_character_self (hunitary : IsUnitary π)
+theorem finrank_smul_integratedOperator_star_character_self
     (hirr : Representation.IsIrreducible π.toRepresentation) :
     (Module.finrank 𝕜 V : 𝕜) • integratedOperator π hπ (star (character π hπ))
       = ContinuousLinearMap.id 𝕜 V := by
   let : Representation.IsIrreducible π.toRepresentation := hirr
   have hdim : (Module.finrank 𝕜 V : 𝕜) ≠ 0 :=
     Representation.IsIrreducible.natCast_finrank_ne_zero hirr
-  rw [integratedOperator_star_character_self π hπ hunitary hirr, smul_smul,
+  rw [integratedOperator_star_character_self π hπ hirr, smul_smul,
     mul_inv_cancel₀ hdim, one_smul]
 
 end Projection
