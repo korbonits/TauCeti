@@ -8,6 +8,8 @@ module
 public import Mathlib.Analysis.Analytic.Basic
 public import Mathlib.Analysis.Normed.Algebra.Logarithm
 
+import TauCeti.Analysis.Normed.Field.NatCast
+
 /-!
 # Convergence of the logarithm series in a Banach algebra
 
@@ -65,28 +67,23 @@ section Normed
 
 variable (𝕂 A : Type*) [NontriviallyNormedField 𝕂]
 variable [NormedRing A] [NormedAlgebra 𝕂 A]
-variable [CharZero 𝕂] [ContinuousSMul ℚ≥0 𝕂]
+variable [CharZero 𝕂]
 
 /-- The radius of `logSeries` is at least one. -/
 theorem one_le_logSeries_radius : 1 ≤ (logSeries 𝕂 A).radius := by
-  let c : ℕ → 𝕂 := fun n ↦ (-1 : 𝕂) ^ (n + 1) / n
-  have hratio : (fun n ↦ ‖c n.succ‖ / ‖c n‖) =
-      fun n : ℕ ↦ ‖(n : 𝕂) / ((n + 1 : ℕ) : 𝕂)‖ := by
-    funext n
-    by_cases hn : n = 0
-    · subst n
-      simp [c]
-    · simp only [c, norm_div, norm_pow, norm_neg, norm_one, one_pow,
-        Nat.cast_add, Nat.cast_one, Nat.succ_eq_add_one]
-      have hn𝕂 : (n : 𝕂) ≠ 0 := Nat.cast_ne_zero.mpr hn
-      have hnorm : ‖(n : 𝕂)‖ ≠ 0 := norm_ne_zero_iff.mpr hn𝕂
-      field_simp
-  have hc : Tendsto (fun n ↦ ‖c n.succ‖ / ‖c n‖) atTop (nhds 1) := by
-    rw [hratio]
-    simpa only [Nat.cast_add, Nat.cast_one, norm_one] using
-      (tendsto_natCast_div_add_atTop (𝕜 := 𝕂) 1).norm
-  simpa [logSeries_eq_ofScalars, c] using
-    (FormalMultilinearSeries.inv_le_ofScalars_radius_of_tendsto A c one_ne_zero hc)
+  refine ENNReal.le_of_forall_nnreal_lt fun r hr ↦ ?_
+  have hr1 : (r : ℝ) < 1 := by exact_mod_cast ENNReal.coe_lt_one_iff.1 hr
+  obtain ⟨B, hB⟩ := (NormedField.tendsto_norm_inv_natCast_mul_pow 𝕂 r.2 hr1).bddAbove_range
+  refine FormalMultilinearSeries.le_radius_of_bound _ (max B ‖logSeries 𝕂 A 0‖) fun n ↦ ?_
+  rcases n.eq_zero_or_pos with rfl | hn
+  · simp
+  · calc ‖logSeries 𝕂 A n‖ * (r : ℝ) ^ n ≤ ‖(n : 𝕂)⁻¹‖ * (r : ℝ) ^ n := by
+          gcongr
+          rw [logSeries_eq_ofScalars]
+          refine (FormalMultilinearSeries.ofScalars_norm_le A _ n hn).trans (le_of_eq ?_)
+          simp [norm_div, norm_inv]
+      _ ≤ B := hB ⟨n, rfl⟩
+      _ ≤ max B ‖logSeries 𝕂 A 0‖ := le_max_left _ _
 
 variable [CompleteSpace A]
 
