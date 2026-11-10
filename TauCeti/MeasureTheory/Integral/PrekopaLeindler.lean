@@ -260,7 +260,7 @@ namespace TauCeti.Real
 the volume of the superlevel set of `h`: below the common supremum the two sets are nonempty and
 one-dimensional Brunn–Minkowski applies, and above it they are empty. -/
 private theorem mul_volume_add_mul_volume_lt_le {f g h : ℝ → ℝ≥0∞} (hf : AEMeasurable f)
-    (hg : AEMeasurable g) (hfg : ⨆ x, f x = ⨆ y, g y) {c d : ℝ} (hc : 0 ≤ c) (hd : 0 ≤ d)
+    (hg : AEMeasurable g) (hfg : ⨆ x, f x = ⨆ y, g y) {c d : ℝ}
     (hmin : ∀ x y, min (f x) (g y) ≤ h (c * x + d * y)) (s : ℝ≥0∞) :
     ENNReal.ofReal c * volume {x | s < f x} + ENNReal.ofReal d * volume {y | s < g y} ≤
       volume {z | s < h z} := by
@@ -268,7 +268,7 @@ private theorem mul_volume_add_mul_volume_lt_le {f g h : ℝ → ℝ≥0∞} (hf
   · obtain ⟨x, hx⟩ := lt_iSup_iff.1 hs
     obtain ⟨y, hy⟩ := lt_iSup_iff.1 (hfg ▸ hs)
     refine (mul_volume_add_mul_volume_le ⟨x, hx⟩ (hf.nullMeasurable measurableSet_Ioi)
-      ⟨y, hy⟩ (hg.nullMeasurable measurableSet_Ioi) hc hd).trans (measure_mono ?_)
+      ⟨y, hy⟩ (hg.nullMeasurable measurableSet_Ioi)).trans (measure_mono ?_)
     rintro _ ⟨_, ⟨x, hx, rfl⟩, _, ⟨y, hy, rfl⟩, rfl⟩
     exact (lt_min hx hy).trans_le (hmin x y)
   · have hf0 : {x | s < f x} = ∅ :=
@@ -279,11 +279,11 @@ private theorem mul_volume_add_mul_volume_lt_le {f g h : ℝ → ℝ≥0∞} (hf
 
 /-- **Prékopa–Leindler inequality for the minimum** on `ℝ`. If `f` and `g` have the same
 supremum and `h (c * x + d * y)` dominates `min (f x) (g y)` for all `x` and `y`, then
-`c ∫ f + d ∫ g ≤ ∫ h`. The coefficients may vanish, and the common supremum and the integrals may
-be infinite. -/
+`c ∫ f + d ∫ g ≤ ∫ h`. The coefficients may vanish or be negative (a negative coefficient
+contributes `0`), and the common supremum and the integrals may be infinite. -/
 theorem mul_lintegral_add_mul_lintegral_le {f g h : ℝ → ℝ≥0∞} (hf : AEMeasurable f)
     (hg : AEMeasurable g) (hh : AEMeasurable h) (hfg : ⨆ x, f x = ⨆ y, g y) {c d : ℝ}
-    (hc : 0 ≤ c) (hd : 0 ≤ d) (hmin : ∀ x y, min (f x) (g y) ≤ h (c * x + d * y)) :
+    (hmin : ∀ x y, min (f x) (g y) ≤ h (c * x + d * y)) :
     ENNReal.ofReal c * (∫⁻ x, f x) + ENNReal.ofReal d * ∫⁻ y, g y ≤ ∫⁻ z, h z := by
   -- The layer-cake formula in `ℝ≥0∞`, at the exponent one.
   have hlayer {u : ℝ → ℝ≥0∞} (hu : AEMeasurable u) :
@@ -292,7 +292,7 @@ theorem mul_lintegral_add_mul_lintegral_le {f g h : ℝ → ℝ≥0∞} (hf : AE
   rw [hlayer hf, hlayer hg, hlayer hh, ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top,
     ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
   exact (le_lintegral_add _ _).trans <| lintegral_mono fun t ↦
-    mul_volume_add_mul_volume_lt_le hf hg hfg hc hd hmin _
+    mul_volume_add_mul_volume_lt_le hf hg hfg hmin _
 
 /-- The one-dimensional Prékopa–Leindler inequality at an interior weight, for `f` and `g` with
 finite suprema. -/
@@ -321,7 +321,7 @@ private theorem rpow_mul_rpow_le_of_iSup_ne_top {θ : ℝ} (hθ₀ : 0 < θ) (h�
     rw [← ENNReal.mul_iSup, ← ENNReal.mul_iSup, ENNReal.inv_mul_cancel hF0 hF,
       ENNReal.inv_mul_cancel hG0 hG]
   have key := mul_lintegral_add_mul_lintegral_le (hf.const_mul _).aemeasurable
-    (hg.const_mul _).aemeasurable (hh.const_mul K⁻¹).aemeasurable hsup h1θ.le hθ₀.le
+    (hg.const_mul _).aemeasurable (hh.const_mul K⁻¹).aemeasurable hsup (c := 1 - θ) (d := θ)
     fun x y ↦ (ENNReal.min_le_rpow_one_sub_mul_rpow _ _ hθ₀.le hθ₁.le).trans <| by
       rw [hscale]
       gcongr
