@@ -22,7 +22,8 @@ The result is packaged as a *normalized cusp datum* `Subgroup.CuspDatum`: a cusp
 generator of the full stabilizer, and a positive width with the conjugation formula. Such a datum
 records exactly the choices from which cusp neighbourhoods and the `q`-coordinate
 `exp (2 * π * I * σ z / w)` are built. The width is not an invariant of the cusp alone; it depends
-on the scaling, and the datum is unique once the cusp and the scaling are fixed.
+on the scaling, and the datum is unique once the scaling is fixed (the scaling determines the
+cusp).
 
 ## Main declarations
 

@@ -143,8 +143,9 @@ theorem hasSum_twistedQExpansion (D : Γ.CuspDatum) (k : ℤ) (f : ℍ → ℂ)
         (mdifferentiable_cuspTwist D k f hhol))
       (isBoundedAtImInfty_cuspTwist_inv_smul D k f hbound) hq_norm
 
-/-- The coefficient at the lowest permitted exponent `-k` is the limiting value of the twisted
-function in the scaling coordinate. -/
+/-- The coefficient at the lowest permitted exponent `-k` is the `valueAtInfty` of the twisted
+function in the scaling coordinate. This is a genuine limit under the holomorphy and growth
+hypotheses of `analyticAt_twistedExtension_zero`; without them `valueAtInfty` is a junk value. -/
 theorem laurentQExpansion_coeff_neg_eq_valueAtInfty (D : Γ.CuspDatum) (k : ℤ) (f : ℍ → ℂ)
     (hf : ∀ (g : stabilizer Γ D.cusp) (z : ℍ), f (g • z) = f z) :
     (laurentQExpansion D k f).coeff (-k) =
