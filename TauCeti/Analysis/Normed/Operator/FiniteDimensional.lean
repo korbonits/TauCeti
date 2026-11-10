@@ -9,6 +9,7 @@ public import Mathlib.Analysis.Normed.Module.FiniteDimension
 public import Mathlib.Analysis.Normed.Operator.Banach
 public import Mathlib.LinearAlgebra.Charpoly.Basic
 public import Mathlib.LinearAlgebra.Eigenspace.Minpoly
+import Mathlib.RingTheory.Artinian.Algebra
 public import Mathlib.Topology.Algebra.Module.FiniteDimension
 
 /-!
@@ -54,8 +55,8 @@ variable {𝕜 V : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
 
 omit [CompleteSpace 𝕜] in
 /-- On a finite-dimensional normed space, a continuous linear map that is invertible as a linear
-map is invertible as a continuous linear map: its inverse is a polynomial in it, by the
-minimal polynomial, so no completeness of the scalar field is needed. -/
+map is invertible as a continuous linear map: the operator is integral over the field of scalars,
+hence a unit once it is not a zero divisor, so no completeness of the scalar field is needed. -/
 theorem isUnit_of_isUnit_toLinearMap {u : V →L[𝕜] V} (hu : IsUnit (u : Module.End 𝕜 V)) :
     IsUnit u := by
   let φ : (V →L[𝕜] V) →ₐ[𝕜] Module.End 𝕜 V :=
@@ -66,27 +67,9 @@ theorem isUnit_of_isUnit_toLinearMap {u : V →L[𝕜] V} (hu : IsUnit (u : Modu
       map_add' := fun _ _ ↦ rfl
       commutes' := fun _ ↦ rfl }
   have hφ : Function.Injective φ := fun f g h ↦ ContinuousLinearMap.coe_injective h
-  have hinj : Function.Injective (u : Module.End 𝕜 V) := (Module.End.isUnit_iff _).1 hu |>.1
-  have hc := LinearMap.minpoly_coeff_zero_of_injective hinj
-  set p := minpoly 𝕜 (u : Module.End 𝕜 V)
-  have hp : Polynomial.aeval u p = 0 := by
-    apply hφ
-    rw [map_zero]
-    exact (Polynomial.aeval_algHom_apply φ u p).symm.trans (minpoly.aeval 𝕜 _)
-  rw [← Polynomial.divX_mul_X_add p, map_add, map_mul, Polynomial.aeval_X,
-    Polynomial.aeval_C] at hp
-  set g := Polynomial.aeval u (Polynomial.divX p)
-  have hcomm : u * g = g * u := by
-    have : Polynomial.aeval u (Polynomial.X * Polynomial.divX p) =
-        Polynomial.aeval u (Polynomial.divX p * Polynomial.X) := by rw [mul_comm]
-    simpa only [map_mul, Polynomial.aeval_X] using this
-  have h1 : g * u = (-(algebraMap 𝕜 (V →L[𝕜] V) (p.coeff 0))) := eq_neg_of_add_eq_zero_left hp
-  rw [isUnit_iff_exists]
-  refine ⟨(-(p.coeff 0)⁻¹) • g, ?_, ?_⟩
-  · rw [mul_smul_comm, hcomm, h1, smul_neg, neg_smul, neg_neg, Algebra.smul_def, ← map_mul,
-      inv_mul_cancel₀ hc, map_one]
-  · rw [smul_mul_assoc, h1, smul_neg, neg_smul, neg_neg, Algebra.smul_def, ← map_mul,
-      inv_mul_cancel₀ hc, map_one]
+  exact IsArtinianRing.isUnit_of_isIntegral_of_nonZeroDivisor
+    ((isIntegral_algHom_iff φ hφ).mp (LinearMap.isIntegral (φ u)))
+    (mem_nonZeroDivisors_of_injective hφ hu.mem_nonZeroDivisors)
 
 omit [CompleteSpace 𝕜] in
 /-- A bounded operator on a finite-dimensional normed space has finite spectrum over any field
