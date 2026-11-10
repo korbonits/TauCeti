@@ -16,6 +16,7 @@ public import TauCeti.Analysis.Normed.Module.Ball.Homeomorph
 public import TauCeti.Topology.CWComplex.Classical.Sphere.Basic
 public import TauCeti.Topology.Homotopy.HomotopyGroup.BasepointChange
 public import TauCeti.Topology.Homotopy.HomotopyGroup.Homeomorph
+import TauCeti.Topology.Homotopy.HomotopyGroup.Basic
 
 /-!
 # Homotopy groups of spheres up to their dimension
@@ -78,29 +79,18 @@ namespace TauCeti
 /-- **Spheres are `(n - 1)`-connected** (Hatcher, Corollary 4.9). For the unit sphere `Sⁿ` of an
 `(n + 1)`-dimensional real normed space, the homotopy set `πₖ(Sⁿ, x)` is trivial for every
 `k = Nat.card N < n`. In degree zero this says that `Sⁿ` is path connected for `n ≥ 1`. For an
-infinite index set `N` the cardinality `Nat.card N` is `0` and the homotopy set is trivial for any
-space, since the boundary of the cube is dense. -/
+infinite index set `N` the cardinality `Nat.card N` is `0` and the homotopy set is trivial, since
+every generalized loop into the (Hausdorff) sphere is constant
+(`HomotopyGroup.subsingleton_of_infinite`). -/
 theorem subsingleton_homotopyGroup_sphere_of_lt {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] {n : ℕ} (hE : finrank ℝ E = n + 1)
     {N : Type*} (hN : Nat.card N < n) (x : sphere (0 : E) 1) :
     Subsingleton (HomotopyGroup N (sphere (0 : E) 1) x) := by
   by_cases hfin : Finite N
   swap
-  · -- For an infinite index set the boundary of the cube is dense, so every loop is constant.
-    rw [not_finite_iff_infinite] at hfin
-    have hdense : Dense (Cube.boundary N) := fun y ↦ by
-      rw [_root_.mem_closure_iff]
-      intro U hU hyU
-      obtain ⟨s, u, hu, hsU⟩ := isOpen_pi_iff.1 hU y hyU
-      classical
-      obtain ⟨i, hi⟩ := Infinite.exists_notMem_finset s
-      refine ⟨Function.update y i 0, hsU fun a ha ↦ ?_, i, Or.inl (by simp)⟩
-      rw [Function.update_of_ne (by rintro rfl; exact hi (Finset.mem_coe.1 ha))]
-      exact (hu a ha).2
-    have : Subsingleton (GenLoop N (sphere (0 : E) 1) x) := ⟨fun f g ↦ Subtype.ext <|
-      DFunLike.coe_injective <| Continuous.ext_on hdense f.1.continuous g.1.continuous
-        fun y hy ↦ (f.2 y hy).trans (g.2 y hy).symm⟩
-    exact inferInstanceAs (Subsingleton (Quotient (GenLoop.Homotopic.setoid N x)))
+  · -- for an infinite index set every loop into the Hausdorff sphere is constant
+    have := not_finite_iff_infinite.1 hfin
+    exact HomotopyGroup.subsingleton_of_infinite x
   have := Fintype.ofFinite N
   have := Module.finite_of_finrank_eq_succ hE
   obtain ⟨m, rfl⟩ := Nat.exists_eq_add_one_of_ne_zero (n := n) (by omega)
