@@ -68,8 +68,7 @@ namespace TauCeti
 
 namespace TotallyRealLoop
 
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [FiniteDimensional ℂ E]
-  (Λ : TotallyRealLoop E)
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] (Λ : TotallyRealLoop E)
 
 /-- Along a loop of maximal totally real subspaces, the Maslov phase relative to any fixed maximal
 totally real subspace varies continuously. -/
@@ -99,7 +98,8 @@ theorem maslovPhasePath_apply (t : I) :
   (rfl)
 
 /-- The **Maslov index** of a loop of maximal totally real subspaces: the degree of its loop of
-Maslov phases `t ↦ ρ(Λ 0, Λ t)` in the circle. -/
+Maslov phases `t ↦ ρ(Λ 0, Λ t)` in the circle. In an infinite-dimensional `E` every Maslov phase is
+the junk value `1`, so the index is `0` there. -/
 noncomputable def maslovIndex : ℤ :=
   Circle.degree Λ.maslovPhasePath
 

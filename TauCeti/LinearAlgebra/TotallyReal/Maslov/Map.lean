@@ -58,8 +58,7 @@ namespace TauCeti
 
 namespace TotallyRealLoop
 
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [FiniteDimensional ℂ E]
-  (Λ : TotallyRealLoop E)
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] (Λ : TotallyRealLoop E)
 
 /-- **The Maslov index under a loop of automorphisms.** If `B` is a loop of complex-linear
 automorphisms and `δ` is the circle loop of normalized determinants,

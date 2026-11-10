@@ -59,14 +59,13 @@ open scoped ComplexConjugate
 namespace TauCeti
 
 variable {E : Type*} [AddCommGroup E] [Module ℝ E] [Module ℂ E] [IsScalarTower ℝ ℂ E]
-  [FiniteDimensional ℂ E] {L : Submodule ℝ E}
+  {L : Submodule ℝ E}
 
 namespace IsMaximalTotallyReal
 
 variable (hL : IsMaximalTotallyReal ((LinearMap.lsmul ℂ E Complex.I).restrictScalars ℝ) L)
 include hL
 
-omit [FiniteDimensional ℂ E] in
 /-- Two complex-linear automorphisms taking `L` to the same subspace have the same determinant
 phase `det A / conj (det A)`: they differ by an automorphism preserving `L`, whose determinant is
 real. -/
@@ -104,12 +103,14 @@ namespace TauCeti
 namespace IsMaximalTotallyReal
 
 variable {E : Type*} [AddCommGroup E] [Module ℝ E] [Module ℂ E] [IsScalarTower ℝ ℂ E]
-  [FiniteDimensional ℂ E] {L : Submodule ℝ E}
+  {L : Submodule ℝ E}
   (hL : IsMaximalTotallyReal ((LinearMap.lsmul ℂ E Complex.I).restrictScalars ℝ) L)
 include hL
 
 /-- The **Maslov phase** `ρ(L₀, L)` of two maximal totally real subspaces of a complex module.
-For `L = A L₀` it is `det A / conj (det A)`; the value is independent of the choice of `A`. -/
+For `L = A L₀` it is `det A / conj (det A)`; the value is independent of the choice of `A`. In an
+infinite-dimensional module every determinant is `1` (`LinearMap.det_eq_one_of_not_module_finite`),
+so there the phase is the junk value `1`. -/
 noncomputable def maslovPhase {L' : Submodule ℝ E}
     (hL' : IsMaximalTotallyReal ((LinearMap.lsmul ℂ E Complex.I).restrictScalars ℝ) L') : ℂ :=
   let A := (hL.exists_linearEquiv_map_eq hL').choose

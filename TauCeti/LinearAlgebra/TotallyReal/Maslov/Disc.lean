@@ -65,8 +65,7 @@ namespace TauCeti
 
 namespace TotallyRealLoop
 
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [FiniteDimensional ℂ E]
-  (Λ : TotallyRealLoop E)
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] (Λ : TotallyRealLoop E)
 
 /-- **Independence of the trivialization on the disc.** Let `B` be a continuous map from the closed
 unit disc to the complex-linear automorphisms of `E`, and `b t = B (e^{2πit})` its loop of
