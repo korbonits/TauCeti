@@ -171,10 +171,10 @@ theorem Orientation.eq_or_eq_neg_of_card_eq_finrank (x₁ x₂ : Orientation R M
       first | (simp [h₁, h₂]; done) | exact Or.inr (by
         rw [h₁, h₂]; exact (neg_neg (positiveOrientation : Orientation R M ι)).symm)
 
-/-- When the index type has cardinality equal to the finite dimension, two self-equivalences
-transport an orientation to the same orientation if and only if their determinants have the same
-sign. -/
-theorem Orientation.map_eq_map_iff_det_mul_pos [FiniteDimensional R M] (x : Orientation R M ι)
+/-- When the index type has cardinality equal to the `finrank`, two self-equivalences transport an
+orientation to the same orientation if and only if their determinants have the same sign. No
+finite-dimensionality is needed: otherwise `ι` is empty and both determinants are `1`. -/
+theorem Orientation.map_eq_map_iff_det_mul_pos (x : Orientation R M ι)
     (f g : M ≃ₗ[R] M) (h : Fintype.card ι = finrank R M) :
     Orientation.map ι f x = Orientation.map ι g x ↔
       0 < LinearMap.det (f : M →ₗ[R] M) * LinearMap.det (g : M →ₗ[R] M) := by
@@ -185,7 +185,7 @@ theorem Orientation.map_eq_map_iff_det_mul_pos [FiniteDimensional R M] (x : Orie
       LinearMap.det (f : M →ₗ[R] M) / LinearMap.det (g : M →ₗ[R] M) := by
     simp [← LinearEquiv.coe_det, LinearEquiv.det_trans, LinearEquiv.det_symm,
       div_eq_mul_inv, mul_comm]
-  rw [htransport, map_eq_iff_det_pos _ _ h, hdet]
+  rw [htransport, map_eq_iff_det_pos_of_card_eq_finrank _ _ h, hdet]
   exact div_pos_iff.trans mul_pos_iff.symm
 
 /-- Two linear equivalences `S` and `T` such that `S.trans T.symm` has positive determinant
