@@ -14,8 +14,9 @@ A pointed space is path connected if and only if its zeroth homotopy set is a su
 This follows from Mathlib's equivalence between the zeroth homotopy set and path components.
 
 For an infinite index set the boundary of the cube is dense, so a generalized loop into a
-Hausdorff space is determined by its boundary values and the homotopy set is trivial
-(`HomotopyGroup.subsingleton_of_infinite`).
+Hausdorff space is determined by its boundary values: there is only one generalized loop and the
+homotopy set is trivial. Both facts are instances (`GenLoop.subsingleton_of_infinite`,
+`HomotopyGroup.subsingleton_of_infinite`).
 -/
 
 public section
@@ -52,10 +53,16 @@ theorem Cube.dense_boundary (N : Type*) [Infinite N] : Dense (Cube.boundary N) :
   rw [Function.update_of_ne (by rintro rfl; exact hi (Finset.mem_coe.1 ha))]
   exact (hu a ha).2
 
-/-- **Homotopy sets indexed by an infinite set are trivial** for Hausdorff spaces: two generalized
-loops agree on the dense boundary of the cube, hence everywhere. -/
-theorem HomotopyGroup.subsingleton_of_infinite {N X : Type*} [Infinite N] [TopologicalSpace X]
-    [T2Space X] (x : X) : Subsingleton (HomotopyGroup N X x) := by
-  refine ⟨Quotient.ind₂ fun f g ↦ congrArg _ (GenLoop.ext f g (congrFun
+/-- **Generalized loops indexed by an infinite set are constant** in a Hausdorff space: two
+generalized loops agree on the dense boundary of the cube, hence everywhere. -/
+instance GenLoop.subsingleton_of_infinite {N X : Type*} [Infinite N] [TopologicalSpace X]
+    [T2Space X] {x : X} : Subsingleton (Ω^ N X x) :=
+  ⟨fun f g ↦ GenLoop.ext f g (congrFun
     (Continuous.ext_on (Cube.dense_boundary N) (map_continuous f) (map_continuous g)
-      fun y hy ↦ (GenLoop.boundary f y hy).trans (GenLoop.boundary g y hy).symm)))⟩
+      fun y hy ↦ (GenLoop.boundary f y hy).trans (GenLoop.boundary g y hy).symm))⟩
+
+/-- **Homotopy sets indexed by an infinite set are trivial** for Hausdorff spaces, since there is
+only one generalized loop (`GenLoop.subsingleton_of_infinite`). -/
+instance HomotopyGroup.subsingleton_of_infinite {N X : Type*} [Infinite N] [TopologicalSpace X]
+    [T2Space X] {x : X} : Subsingleton (HomotopyGroup N X x) :=
+  ⟨Quotient.ind₂ fun f g ↦ congrArg _ (Subsingleton.elim f g)⟩

@@ -90,7 +90,7 @@ theorem subsingleton_homotopyGroup_sphere_of_lt {E : Type*} [NormedAddCommGroup 
   swap
   · -- for an infinite index set every loop into the Hausdorff sphere is constant
     have := not_finite_iff_infinite.1 hfin
-    exact HomotopyGroup.subsingleton_of_infinite x
+    infer_instance
   have := Fintype.ofFinite N
   have := Module.finite_of_finrank_eq_succ hE
   obtain ⟨m, rfl⟩ := Nat.exists_eq_add_one_of_ne_zero (n := n) (by omega)
