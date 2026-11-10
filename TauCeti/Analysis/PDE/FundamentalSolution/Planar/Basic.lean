@@ -34,7 +34,9 @@ and scaling API used when the kernel is integrated against a source to form a Ne
 * `AnalyticAt.harmonicAt_planarNewtonianKernel`: harmonicity of `G ∘ f` for analytic `f` off the
   zeros of `f`.
 * `TauCeti.contDiffAt_planarNewtonianKernel`: smoothness away from the origin.
-* `TauCeti.laplacian_planarNewtonianKernel`: the pointwise equation `Δ G = 0` off the pole.
+* `TauCeti.laplacian_planarNewtonianKernel`: the pointwise equation `Δ G = 0` (genuine off the pole;
+  the value at the pole is a junk value).
+* `TauCeti.laplacian_planarNewtonianKernel_sub`: the same for a kernel with pole `a`.
 -/
 
 public section
@@ -176,7 +178,9 @@ theorem laplacian_planarNewtonianKernel_sub {z a : ℂ} :
       (not_differentiableAt_fderiv_planarNewtonianKernel_sub z)]
   · exact (harmonicAt_planarNewtonianKernel_sub hza).2.self_of_nhds
 
-/-- The planar Newtonian kernel solves the homogeneous Laplace equation pointwise. -/
+/-- The planar Newtonian kernel solves the homogeneous Laplace equation pointwise. At the pole the
+value `0` is the junk value of the non-differentiable kernel. Its nonzero distributional Laplacian
+`-δ₀` is concentrated at the pole. -/
 @[simp]
 theorem laplacian_planarNewtonianKernel {z : ℂ} : Δ planarNewtonianKernel z = 0 := by
   simpa using laplacian_planarNewtonianKernel_sub (z := z) (a := 0)
