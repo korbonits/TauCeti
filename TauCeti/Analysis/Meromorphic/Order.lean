@@ -100,15 +100,14 @@ section Bounded
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {E : Type*} [NormedAddCommGroup E]
   [NormedSpace 𝕜 E] {g : 𝕜 → E} {x : 𝕜}
 
-/-- A function which is meromorphic at `x` and bounded on a punctured neighbourhood of `x` has
-nonnegative meromorphic order at `x`. -/
-theorem MeromorphicAt.meromorphicOrderAt_nonneg_of_boundedAtFilter
-    (hg : MeromorphicAt g x) (hbdd : BoundedAtFilter (𝓝[≠] x) g) :
+/-- A function which is bounded on a punctured neighbourhood of `x` has nonnegative meromorphic
+order at `x`. -/
+theorem meromorphicOrderAt_nonneg_of_boundedAtFilter (hbdd : BoundedAtFilter (𝓝[≠] x) g) :
     0 ≤ meromorphicOrderAt g x := by
   by_contra hlt
   exact Filter.not_isBoundedUnder_of_tendsto_atTop
     (tendsto_norm_atTop_iff_cobounded.mpr
-      ((tendsto_cobounded_iff_meromorphicOrderAt_neg hg).mpr (not_le.mp hlt)))
+      (tendsto_cobounded_of_meromorphicOrderAt_neg (not_le.mp hlt)))
     ((Asymptotics.isBigO_one_iff (F := ℝ)).mp hbdd)
 
 end Bounded

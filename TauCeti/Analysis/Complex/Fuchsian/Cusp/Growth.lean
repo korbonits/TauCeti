@@ -265,7 +265,7 @@ theorem neg_le_meromorphicOrderAt_cuspExtension_of_meromorphicAt (D : Γ.CuspDat
       ((isBoundedAtImInfty_cuspTwist_inv_smul D k f hbound).comp_tendsto
         tendsto_comap_im_ofComplex)
   rw [meromorphicOrderAt_cuspExtension_eq_neg_add_meromorphicOrderAt_twistedExtension D k f hT]
-  exact le_add_of_nonneg_right (hT.meromorphicOrderAt_nonneg_of_boundedAtFilter hbdd)
+  exact le_add_of_nonneg_right (meromorphicOrderAt_nonneg_of_boundedAtFilter hbdd)
 
 /-- The meromorphic order of a cusp extension is at least `-k` under the exponential bound
 corresponding to the integer coordinate twist `k`. -/
