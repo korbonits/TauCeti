@@ -248,12 +248,27 @@ theorem eLpNorm_restrict_leftCoset_eq_comap {ε : Type*} [TopologicalSpace ε]
 /-- **Left-coset representative independence for lower Lebesgue integrals.** -/
 @[to_additive /-- **Left-coset representative independence for lower Lebesgue integrals.** -/]
 theorem lintegral_mul_left_comap_eq_of_inv_mul_mem [SubgroupClass S G] [μ.IsMulLeftInvariant]
-    (hH : MeasurableSet (H : Set G)) {g₁ g₂ : G} (hg : g₁⁻¹ * g₂ ∈ H) (f : G → ℝ≥0∞) :
+    {g₁ g₂ : G} (hg : g₁⁻¹ * g₂ ∈ H) (f : G → ℝ≥0∞) :
     ∫⁻ u : H, f (g₁ * (u : G)) ∂(μ.comap ((↑) : H → G)) =
       ∫⁻ u : H, f (g₂ * (u : G)) ∂(μ.comap ((↑) : H → G)) := by
-  have : (μ.comap ((↑) : H → G)).IsMulLeftInvariant :=
-    Measure.IsMulLeftInvariant.comap μ (f := SubgroupClass.subtype H)
-      (MeasurableEmbedding.subtype_coe hH)
+  have : (μ.comap ((↑) : H → G)).IsMulLeftInvariant := by
+    refine ⟨fun h ↦ ?_⟩
+    by_cases hc : Function.Injective ((↑) : H → G) ∧
+        ∀ s, MeasurableSet s → NullMeasurableSet (((↑) : H → G) '' s) μ
+    · ext s hs
+      rw [Measure.map_apply (by fun_prop) hs,
+        Measure.comap_apply₀ _ _ hc.1 hc.2 (hs.preimage (by fun_prop)).nullMeasurableSet,
+        Measure.comap_apply₀ _ _ hc.1 hc.2 hs.nullMeasurableSet]
+      have himg : ((↑) : H → G) '' ((h * ·) ⁻¹' s) =
+          ((h : G) * ·) ⁻¹' (((↑) : H → G) '' s) := by
+        ext x
+        constructor
+        · rintro ⟨y, hy, rfl⟩
+          exact ⟨h * y, hy, by simp⟩
+        · rintro ⟨y, hy, hyx⟩
+          exact ⟨h⁻¹ * y, by simpa using hy, by simp [hyx]⟩
+      rw [himg, measure_preimage_mul]
+    · rw [Measure.comap_undef hc, Measure.map_zero]
   rw [← lintegral_mul_left_eq_self (fun u : H ↦ f (g₁ * (u : G))) ⟨g₁⁻¹ * g₂, hg⟩]
   congr 1 with u
   simp [MulMemClass.coe_mul, ← mul_assoc]
