@@ -74,6 +74,7 @@ section RationalPoints
 variable [MonObj G] [ModObj G X] [LocallyOfFiniteType G.hom]
   [LocallyOfFiniteType X.hom]
 
+omit [LocallyOfFiniteType X.hom] in
 /-- Over an algebraically closed field, a rational point of `X` lies in the geometric orbit of
 `x` exactly when it is a translate of `x` by a rational point of `G`. -/
 theorem left_apply_mem_orbit_iff (x y : 𝟙_ (Over (Spec (.of k))) ⟶ X)
