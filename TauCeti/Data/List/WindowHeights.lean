@@ -19,7 +19,7 @@ at an entry `k` with `0 ≤ fₖ`, we get `0 < gₖ`
 (`List.pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul`). For a list `D` of pairs `(τ, d)` of
 durations and a weight `c τ`, suppose the integer weights `c(τₖ)` give heights
 `hₖ = ∑_{j<k} dⱼ c(τⱼ)` that start at an integer `z` at `k₀`, satisfy `hₖ < hₖ₊₁` for
-`k₀ ≤ k ≤ j₁`, and stay below `z + 1` at `j₁`, and suppose the
+`k₀ ≤ k < j₁`, and stay below `z + 1` at `j₁`, and suppose the
 heights are congruent modulo integers to the break times `aₖ` times the weights. Then `aₖ c(τₖ)`
 is not an integer for `k₀ < k ≤ j₁`
 (`List.not_exists_intCast_sum_take_map_snd_mul`), and `(a_{j₁} + θ d_{j₁}) c(τ_{j₁})` is an
@@ -58,7 +58,7 @@ theorem pos_of_sum_take_map_mul_lt_sum_take_succ_map_mul {R : Type*} [Semiring R
 
 /-- **Non-integrality in a window.** Let `D` be a list of pairs `(τ, d)` of durations and integer
 weights `c τ`, and write `hₖ = ∑_{j<k} dⱼ c(τⱼ)` for the heights. Suppose `hₖ₀ = z` is
-an integer, `hₖ < hₖ₊₁` for `k₀ ≤ k ≤ j₁` (that is, `dₖ c(τₖ) > 0` there), the height `hⱼ₁` is
+an integer, `hₖ < hₖ₊₁` for `k₀ ≤ k < j₁` (that is, `dₖ c(τₖ) > 0` there), the height `hⱼ₁` is
 below `z + 1`, and `hₖ` is congruent modulo integers to
 `aₖ c(τₖ)` at the break `aₖ = ∑_{j<k} dⱼ`. Then `aₖ c(τₖ)` is not an integer for
 `k₀ < k ≤ j₁`. -/
@@ -66,7 +66,7 @@ theorem not_exists_intCast_sum_take_map_snd_mul
     {K : Type*} [CommRing K] [LinearOrder K] [IsStrictOrderedRing K]
     (c : α → ℤ) (D : List (α × K)) {k₀ j₁ : ℕ} {z : ℤ}
     (hk₀ : ((D.take k₀).map fun p ↦ p.2 * (c p.1 : K)).sum = z)
-    (hrise : ∀ k, k₀ ≤ k → k ≤ j₁ →
+    (hrise : ∀ k, k₀ ≤ k → k < j₁ →
       ((D.take k).map fun p ↦ p.2 * (c p.1 : K)).sum <
         ((D.take (k + 1)).map fun p ↦ p.2 * (c p.1 : K)).sum)
     (hcong : ∀ k (hk : k < D.length), ∃ m : ℤ,

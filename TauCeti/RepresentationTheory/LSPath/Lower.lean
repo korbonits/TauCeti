@@ -392,7 +392,7 @@ private theorem exists_lower_toPLPath_eq_ofSegments_lowerList (π : LSPath P b l
       rw [hDj₁]; exact mul_pos hθpos hdH
     linarith
   have hint := List.not_exists_intCast_sum_take_map_snd_mul (fun w ↦ P.coroot' i (w • lam)) D
-    hgtk₀ hrise' hlinked hj₁z
+    hgtk₀ (fun k hk₀k hkj ↦ hrise' k hk₀k hkj.le) hlinked hj₁z
   have hleft : ∀ k (hk : k < D.length), k + 1 = k₀ → P.coroot' i (D[k].1 • lam) ≤ 0 :=
     fun k hk hkk ↦ List.nonpos_of_sum_take_map_mul_eq (fun w ↦ P.coroot' i (w • lam)) D hk
       (hdpos k hk) (hleftH k hkk) (hkk ▸ hgtk₀)
