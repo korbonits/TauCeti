@@ -138,7 +138,7 @@ theorem uncenteredMaximalFunction_le_two_pow_mul_maximalFunction (μ : Measure E
         rw [hvol, ENNReal.mul_div_cancel_right (Metric.measure_ball_pos μ y hr).ne'
           measure_ball_lt_top.ne]
         gcongr
-        exact setLAverage_le_maximalFunction μ f x (by positivity)
+        exact setLAverage_le_maximalFunction μ f x
 
 end Haar
 
