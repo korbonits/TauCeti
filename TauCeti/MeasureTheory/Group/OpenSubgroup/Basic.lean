@@ -10,6 +10,7 @@ public import Mathlib.MeasureTheory.Measure.OpenPos
 public import Mathlib.Topology.Algebra.OpenSubgroup
 public import TauCeti.MeasureTheory.Function.Lp.Subtype
 public import TauCeti.MeasureTheory.Group.Arithmetic
+public import TauCeti.MeasureTheory.Group.Measure
 public import TauCeti.MeasureTheory.Group.ModularCharacter
 public import TauCeti.MeasureTheory.Group.SigmaCompactSupport
 public import TauCeti.MeasureTheory.Integral.PeakFunction
@@ -251,24 +252,7 @@ theorem lintegral_mul_left_comap_eq_of_inv_mul_mem [SubgroupClass S G] [μ.IsMul
     {g₁ g₂ : G} (hg : g₁⁻¹ * g₂ ∈ H) (f : G → ℝ≥0∞) :
     ∫⁻ u : H, f (g₁ * (u : G)) ∂(μ.comap ((↑) : H → G)) =
       ∫⁻ u : H, f (g₂ * (u : G)) ∂(μ.comap ((↑) : H → G)) := by
-  have : (μ.comap ((↑) : H → G)).IsMulLeftInvariant := by
-    refine ⟨fun h ↦ ?_⟩
-    by_cases hc : Function.Injective ((↑) : H → G) ∧
-        ∀ s, MeasurableSet s → NullMeasurableSet (((↑) : H → G) '' s) μ
-    · ext s hs
-      rw [Measure.map_apply (by fun_prop) hs,
-        Measure.comap_apply₀ _ _ hc.1 hc.2 (hs.preimage (by fun_prop)).nullMeasurableSet,
-        Measure.comap_apply₀ _ _ hc.1 hc.2 hs.nullMeasurableSet]
-      have himg : ((↑) : H → G) '' ((h * ·) ⁻¹' s) =
-          ((h : G) * ·) ⁻¹' (((↑) : H → G) '' s) := by
-        ext x
-        constructor
-        · rintro ⟨y, hy, rfl⟩
-          exact ⟨h * y, hy, by simp⟩
-        · rintro ⟨y, hy, hyx⟩
-          exact ⟨h⁻¹ * y, by simpa using hy, by simp [hyx]⟩
-      rw [himg, measure_preimage_mul]
-    · rw [Measure.comap_undef hc, Measure.map_zero]
+  have := Measure.isMulLeftInvariant_comap_subtype H μ
   rw [← lintegral_mul_left_eq_self (fun u : H ↦ f (g₁ * (u : G))) ⟨g₁⁻¹ * g₂, hg⟩]
   congr 1 with u
   simp [MulMemClass.coe_mul, ← mul_assoc]
