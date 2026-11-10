@@ -122,7 +122,7 @@ theorem abelianizedLocalCyclotomicCharacter_artinMap_normUnits_eq_finprod
   simp only [Units.coe_prod, Algebra.coe_normUnits, Units.coe_map, MonoidHom.coe_ofClass]
   exact algebraMap_norm_eq_prod_norm L v (x : L)
 
-omit [NumberField L] in
+omit [NumberField K] [NumberField L] in
 /-- **The cyclotomic character of archimedean Artin symbols along a local norm**, the
 archimedean analogue of `abelianizedLocalCyclotomicCharacter_artinMap_norm`. For a place `w` of
 `L` over the infinite place `v` of `K` and `x ∈ L_wˣ`, the `p`-adic cyclotomic character of
@@ -132,6 +132,7 @@ theorem abelianizedLocalCyclotomicCharacter_infiniteArtinAt_norm (v : InfinitePl
     abelianizedLocalCyclotomicCharacter p w.Completion (infiniteArtinAt w x) =
       abelianizedLocalCyclotomicCharacter p v.Completion
         (infiniteArtinAt v (Algebra.normUnits v.Completion x)) := by
+  have : CharZero K := v.embedding.charZero
   have : CharZero v.Completion :=
     charZero_of_injective_algebraMap (algebraMap K v.Completion).injective
   obtain ⟨τ, hτ⟩ := QuotientGroup.mk_surjective (infiniteArtinAt w x)
