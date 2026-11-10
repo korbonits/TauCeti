@@ -157,7 +157,7 @@ theorem spatialDeriv_toSymbol (j : Fin n) :
   · simp [χ.apply_zero]
   · have hd : DifferentiableAt ℝ (fun y => a.coefficient (y, ξ)) x :=
       (a.differentiableAt_coefficient (p := (x, ξ)) hξ).comp x (by fun_prop)
-    rw [fderiv_fun_const_smul hd, smul_apply, coefficient_spatialDeriv _ _ hξ]
+    rw [fderiv_fun_const_smul hd, smul_apply, coefficient_spatialDeriv _ _]
 
 /-! ### Uniqueness of homogeneous terms -/
 

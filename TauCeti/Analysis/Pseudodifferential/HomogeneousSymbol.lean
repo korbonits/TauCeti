@@ -13,6 +13,7 @@ public import Mathlib.Analysis.SpecialFunctions.Pow.Real
 public import TauCeti.Analysis.Calculus.CoordinateDeriv
 public import TauCeti.Analysis.Pseudodifferential.Frequency.Cutoff
 import TauCeti.Analysis.Calculus.ContDiff.Bounds
+import TauCeti.Analysis.Calculus.FDeriv.Prod
 import TauCeti.Analysis.Calculus.IteratedFDeriv.Homogeneous
 import TauCeti.Analysis.Normed.Module.Multilinear.Basic
 import TauCeti.Analysis.SpecialFunctions.Pow.Bounds
@@ -538,13 +539,7 @@ theorem coefficient_spatialDeriv_eq_fderiv (v : X) {x : X} {ξ : E} :
     (a.spatialDeriv v).coefficient (x, ξ) = fderiv ℝ a.coefficient (x, ξ) (v, 0) := by
   rcases eq_or_ne ξ 0 with rfl | hξ
   · by_cases hd : DifferentiableAt ℝ a.coefficient (x, 0)
-    · have h : HasFDerivAt (fun y ↦ a.coefficient (y, (0 : E)))
-          ((fderiv ℝ a.coefficient (x, 0)).comp (ContinuousLinearMap.inl ℝ X E)) x :=
-        hd.hasFDerivAt.comp x (hasFDerivAt_prodMk_left x 0)
-      have h0 : HasFDerivAt (fun y ↦ a.coefficient (y, (0 : E))) (0 : X →L[ℝ] V →L[ℂ] W) x := by
-        simpa using hasFDerivAt_const (0 : V →L[ℂ] W) x
-      have := congrArg (fun L ↦ L v) (h.unique h0)
-      simpa using this.symm
+    · simpa using congrArg (fun L ↦ L v) (fderiv_slice_left hd)
     · simp [fderiv_zero_of_not_differentiableAt hd]
   · exact coefficient_mk'_of_ne_zero _ _ _ hξ
 
@@ -554,10 +549,13 @@ theorem coefficient_frequencyDeriv_eq_fderiv (w : E) {x : X} {ξ : E} (hξ : ξ 
     (a.frequencyDeriv w).coefficient (x, ξ) = fderiv ℝ a.coefficient (x, ξ) (0, w) :=
   coefficient_mk'_of_ne_zero _ _ _ hξ
 
-/-- At a nonzero frequency, the spatial derivative is the partial derivative in the position. -/
+/-- The spatial derivative is the partial derivative in the position. At the zero frequency both
+sides vanish, since the coefficient is zero along `ξ = 0`. -/
 @[simp]
-theorem coefficient_spatialDeriv (v : X) {x : X} {ξ : E} (hξ : ξ ≠ 0) :
+theorem coefficient_spatialDeriv (v : X) {x : X} {ξ : E} :
     (a.spatialDeriv v).coefficient (x, ξ) = fderiv ℝ (fun y ↦ a.coefficient (y, ξ)) x v := by
+  rcases eq_or_ne ξ 0 with rfl | hξ
+  · simp
   have h : HasFDerivAt (fun y ↦ a.coefficient (y, ξ))
       ((fderiv ℝ a.coefficient (x, ξ)).comp (ContinuousLinearMap.inl ℝ X E)) x :=
     (a.differentiableAt_coefficient (p := (x, ξ)) hξ).hasFDerivAt.comp x
@@ -805,13 +803,13 @@ private theorem coefficient_iterFrequencyDeriv (a : HomogeneousSymbol X (Coordin
       coordinateDeriv_cons, h.fderiv_eq]
 
 private theorem coefficient_iterSpatialDeriv (a : HomogeneousSymbol (CoordinateSpace n) E V W m)
-    (α : List (Fin n)) (x : CoordinateSpace n) {ξ : E} (hξ : ξ ≠ 0) :
+    (α : List (Fin n)) (x : CoordinateSpace n) {ξ : E} :
     (iterSpatialDeriv a α).coefficient (x, ξ) =
       coordinateDeriv α (fun y => a.coefficient (y, ξ)) x := by
   induction α generalizing x with
   | nil => simp [iterSpatialDeriv]
   | cons j js ih =>
-    rw [iterSpatialDeriv, coefficient_spatialDeriv _ _ hξ, coordinateDeriv_cons, funext ih]
+    rw [iterSpatialDeriv, coefficient_spatialDeriv _ _, coordinateDeriv_cons, funext ih]
 
 /-- **Growth of the mixed derivatives of a homogeneous symbol.** On a compact set of positions,
 the mixed derivatives of a homogeneous symbol of degree `m` satisfy
@@ -825,7 +823,7 @@ theorem exists_norm_mixedDeriv_le
   refine ⟨C, hC, fun x hx ξ hξ => ?_⟩
   have h : (iterSpatialDeriv (iterFrequencyDeriv a β) α).coefficient (x, ξ) =
       mixedDeriv α β a.coefficient x ξ := by
-    rw [coefficient_iterSpatialDeriv _ _ _ hξ, mixedDeriv_def]
+    rw [coefficient_iterSpatialDeriv _ _ _, mixedDeriv_def]
     exact congrArg (coordinateDeriv α · x)
       (funext fun y => coefficient_iterFrequencyDeriv a β y hξ)
   exact h ▸ hCK x hx ξ
