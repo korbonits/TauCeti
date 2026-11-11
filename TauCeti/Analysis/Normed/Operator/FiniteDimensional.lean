@@ -60,12 +60,7 @@ hence a unit once it is not a zero divisor, so no completeness of the scalar fie
 theorem isUnit_of_isUnit_toLinearMap {u : V →L[𝕜] V} (hu : IsUnit (u : Module.End 𝕜 V)) :
     IsUnit u := by
   let φ : (V →L[𝕜] V) →ₐ[𝕜] Module.End 𝕜 V :=
-    { toFun := fun f ↦ (f : Module.End 𝕜 V)
-      map_one' := rfl
-      map_mul' := fun _ _ ↦ rfl
-      map_zero' := rfl
-      map_add' := fun _ _ ↦ rfl
-      commutes' := fun _ ↦ rfl }
+    { ContinuousLinearMap.toLinearMapRingHom with commutes' := fun _ ↦ rfl }
   have hφ : Function.Injective φ := fun f g h ↦ ContinuousLinearMap.coe_injective h
   exact IsArtinianRing.isUnit_of_isIntegral_of_nonZeroDivisor
     ((isIntegral_algHom_iff φ hφ).mp (LinearMap.isIntegral (φ u)))
