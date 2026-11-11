@@ -8,7 +8,9 @@ module
 public import Mathlib.Algebra.Order.BigOperators.Group.List
 public import Mathlib.Algebra.Order.Field.Rat
 public import Mathlib.Tactic.Linarith
-public import TauCeti.Data.Rat.CastArith
+public import Mathlib.Tactic.LinearCombination
+public import TauCeti.Algebra.BigOperators.Group.List
+public import TauCeti.Algebra.Order.Ring.IntCast
 public import TauCeti.Order.Monotone.LtAddOne
 
 /-!
@@ -34,14 +36,6 @@ public section
 namespace List
 
 variable {α : Type*}
-
-/-- The partial sum of `g` through an entry is the partial sum before it plus the entry's own
-term. -/
-theorem sum_take_succ_map_get {M : Type*} [AddMonoid M] (g : α → M) (D : List α) {k : ℕ}
-    (hk : k < D.length) :
-    ((D.take (k + 1)).map g).sum = ((D.take k).map g).sum + g D[k] := by
-  rw [List.map_take, List.map_take, List.sum_take_succ _ _ (by simpa using hk),
-    List.getElem_map]
 
 /-- Where the partial sums of `fⱼ gⱼ` rise strictly at an entry `k` with `0 ≤ fₖ`, the weight `gₖ`
 of that entry is positive. -/

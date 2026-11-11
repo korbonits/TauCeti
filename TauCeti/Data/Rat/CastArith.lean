@@ -5,39 +5,19 @@ Authors: The Tau Ceti contributors
 -/
 module
 
-public import Mathlib.Algebra.Order.Field.Rat
 public import Mathlib.Data.Rat.Cast.CharZero
-public import Mathlib.Tactic.Linarith
 public import Mathlib.Tactic.LinearCombination
 
 /-!
-# Integrality arguments in ordered rings and fields
+# Rational arithmetic in a field of characteristic zero
 
-An element of an ordered ring strictly between two consecutive integers, congruent modulo integers
-to `c`, shows that `c` is not an integer (`TauCeti.not_exists_intCast_of_lt_of_lt_add_one`), and a
-relation `x + θ y = r` with `x`, `y`, `r` rational and `y` nonzero determines `θ` as a rational
-number (`TauCeti.eq_ratCast_div_of_add_mul_eq`). Only the latter lemma involves rational numbers;
-the former holds in any ordered ring.
+A relation `x + θ y = r` with `x`, `y`, `r` rational and `y` nonzero determines `θ` as a rational
+number (`TauCeti.eq_ratCast_div_of_add_mul_eq`).
 -/
 
 public section
 
 namespace TauCeti
-
-/-- An element of an ordered ring strictly between two consecutive integers, congruent modulo
-integers to `c`, shows that `c` is not an integer. -/
-theorem not_exists_intCast_of_lt_of_lt_add_one {R : Type*} [CommRing R] [LinearOrder R]
-    [IsStrictOrderedRing R] {x c : R} {z : ℤ}
-    (hx : ∃ m : ℤ, x - c = m) (h₁ : (z : R) < x) (h₂ : x < z + 1) : ¬∃ m : ℤ, c = m := by
-  rintro ⟨m, rfl⟩
-  obtain ⟨m', hm'⟩ := hx
-  have hk' : x = ((m' + m : ℤ) : R) := by
-    push_cast
-    linarith
-  rw [hk'] at h₁ h₂
-  have h₁' : z < m' + m := by exact_mod_cast h₁
-  have h₂' : m' + m < z + 1 := by exact_mod_cast h₂
-  omega
 
 /-- If `x + θ y = r` in a field `𝕜` of characteristic zero, with `x`, `y`, `r` rational and `y`
 nonzero, then `θ` is the rational number `(r - x) / y`. -/
