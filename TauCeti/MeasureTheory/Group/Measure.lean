@@ -137,6 +137,9 @@ undefined, it is the zero measure. -/]
 theorem isMulLeftInvariant_comap_subtype {G S : Type*} [Group G] [MeasurableSpace G]
     [MeasurableMul G] [SetLike S G] [SubgroupClass S G] (H : S) (μ : Measure G)
     [μ.IsMulLeftInvariant] : (μ.comap ((↑) : H → G)).IsMulLeftInvariant := by
+  -- Adapted from Mathlib's `Measure.IsMulLeftInvariant.comap` (the image/preimage identity and
+  -- the invariance computation); the new case is the undefined pullback, which is the zero
+  -- measure and so trivially invariant.
   refine ⟨fun h ↦ ?_⟩
   by_cases hc : Function.Injective ((↑) : H → G) ∧
       ∀ s, MeasurableSet s → NullMeasurableSet (((↑) : H → G) '' s) μ
