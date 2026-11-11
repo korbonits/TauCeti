@@ -357,15 +357,6 @@ open Filter
 variable {𝕜 : Type*} [Ring 𝕜] [AddCommGroup F] [Module 𝕜 F] [IsTopologicalAddGroup F]
   {L : Submodule 𝕜 F}
 
-/-- The parametrization `z ↦ φ.symm (φ x + z)` of the source of a chart `φ` around `x` is
-continuous at `0`. -/
-theorem _root_.OpenPartialHomeomorph.continuousAt_symm_add
-    {φ : OpenPartialHomeomorph M F} {x : M} (hxφ : x ∈ φ.source) :
-    ContinuousAt (fun z : F ↦ φ.symm (φ x + z)) 0 := by
-  have hcont : Continuous fun z : F ↦ φ x + z := continuous_const.add continuous_id
-  refine ContinuousAt.comp (f := fun z : F ↦ φ x + z) ?_ hcont.continuousAt
-  simpa using φ.continuousAt_symm (φ.map_source hxφ)
-
 /-- The parametrization `z ↦ φ.symm (φ x + z)` of a set `A` flattened by the chart `φ` onto a
 linear subspace `L` takes values in `A` for small parameters, for `x ∈ A`. -/
 theorem eventually_symm_add_mem {φ : OpenPartialHomeomorph M F} {A : Set M} {x : M}

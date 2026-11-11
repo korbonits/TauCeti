@@ -10,6 +10,7 @@ import TauCeti.Analysis.Calculus.TangentCone.Chart
 import TauCeti.Analysis.Normed.Operator.FiniteDimensional
 import TauCeti.LinearAlgebra.Dimension.Submodule
 import TauCeti.LinearAlgebra.Dual.Lemmas
+import TauCeti.Topology.OpenPartialHomeomorph.Continuity
 
 /-!
 # Level discs transverse to a projection
